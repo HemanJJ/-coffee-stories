@@ -146,11 +146,93 @@
             padding: 40px 20px;
         }
 
+        /* 搜尋與篩選列 */
+        .search-filter-container {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 40px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .search-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .search-input {
+            width: 100%;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 12px 16px 12px 40px;
+            border-radius: 8px;
+            font-family: var(--font-sans);
+            font-size: 0.95rem;
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(142, 104, 77, 0.15);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            opacity: 0.6;
+            font-size: 0.95rem;
+        }
+
+        .filter-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .filter-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-right: 5px;
+        }
+
+        .filter-tag {
+            background-color: var(--bg-secondary);
+            color: var(--text-secondary);
+            border: 1px solid transparent;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .filter-tag:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .filter-tag.active {
+            background-color: var(--accent);
+            color: #ffffff;
+            border-color: var(--accent);
+        }
+
         /* 故事網格 */
         .gallery-title {
             font-family: var(--font-serif);
             font-size: 1.6rem;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             color: var(--text-primary);
             display: flex;
             align-items: center;
@@ -169,6 +251,16 @@
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 30px;
             margin-bottom: 60px;
+        }
+
+        /* 無資料提示 */
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+            font-size: 1rem;
+            font-weight: 300;
         }
 
         /* 故事卡片 */
@@ -316,7 +408,7 @@
             font-weight: 500;
         }
 
-        .input-group input, .input-group textarea {
+        .input-group input, .input-group textarea, .input-group select {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
             color: var(--text-primary);
@@ -328,7 +420,7 @@
             transition: var(--transition);
         }
 
-        .input-group input:focus, .input-group textarea:focus {
+        .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
             border-color: var(--accent);
             box-shadow: 0 0 0 3px rgba(142, 104, 77, 0.15);
         }
@@ -541,6 +633,7 @@
             transition: var(--transition);
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 8px;
         }
 
@@ -558,6 +651,216 @@
         .btn-action-primary:hover {
             background-color: var(--accent-hover);
             color: #ffffff;
+        }
+
+        .btn-danger {
+            color: #d9534f;
+            border-color: #d9534f;
+        }
+
+        .btn-danger:hover {
+            background-color: #d9534f;
+            color: #ffffff;
+            border-color: #d9534f;
+        }
+
+        /* ==================== 管理後台樣式 (Admin Panel) ==================== */
+        .btn-admin-link {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            text-decoration: underline;
+            cursor: pointer;
+            margin-top: 10px;
+            display: inline-block;
+            transition: var(--transition);
+        }
+
+        .btn-admin-link:hover {
+            color: var(--accent);
+        }
+
+        /* 管理後台 Dialog */
+        dialog.admin-dialog {
+            border: none;
+            border-radius: 20px;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
+            width: 95%;
+            max-width: 800px;
+            margin: auto;
+            outline: none;
+            overflow: hidden;
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        dialog.admin-dialog::backdrop {
+            background-color: rgba(26, 18, 13, 0.85);
+            backdrop-filter: blur(12px);
+        }
+
+        .admin-container {
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh;
+        }
+
+        .admin-header {
+            padding: 20px 25px;
+            background-color: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .admin-title {
+            font-family: var(--font-serif);
+            font-size: 1.4rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .admin-body {
+            padding: 25px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        /* 管理故事清單 */
+        .admin-stories-list {
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            background-color: var(--card-bg);
+            overflow: hidden;
+        }
+
+        .admin-list-header {
+            background-color: var(--bg-secondary);
+            padding: 12px 18px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-story-item {
+            padding: 15px 18px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            transition: var(--transition);
+        }
+
+        .admin-story-item:last-child {
+            border-bottom: none;
+        }
+
+        .admin-story-item:hover {
+            background-color: var(--bg-secondary);
+        }
+
+        .admin-story-meta {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .admin-story-thumb {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .admin-story-info h4 {
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+        }
+
+        .admin-story-info p {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .admin-story-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            border-radius: 6px;
+        }
+
+        /* 編輯表單 */
+        .admin-form-panel {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            display: none; /* 預設隱藏，點擊編輯/新增時顯示 */
+            animation: fadeIn 0.3s ease;
+        }
+
+        .admin-form-panel.active {
+            display: block;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        @media (min-width: 600px) {
+            .form-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .form-full {
+                grid-column: span 2;
+            }
+        }
+
+        /* 複製匯出區 */
+        .export-section {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .export-section h3 {
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .export-textarea {
+            width: 100%;
+            height: 120px;
+            font-family: monospace;
+            font-size: 0.8rem;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 10px;
+            border-radius: 6px;
+            resize: none;
+            margin-bottom: 12px;
+            outline: none;
         }
 
         /* 頁尾 */
@@ -603,11 +906,19 @@
             .guestbook-section {
                 padding: 20px;
             }
-            dialog.story-dialog {
+            dialog.story-dialog, dialog.admin-dialog {
                 width: 95%;
             }
-            .dialog-footer {
+            .dialog-footer, .admin-story-item {
                 flex-direction: column;
+                align-items: stretch;
+            }
+            .admin-story-meta {
+                width: 100%;
+            }
+            .admin-story-actions {
+                justify-content: flex-end;
+                margin-top: 10px;
             }
             .dialog-footer .btn-action {
                 width: 100%;
@@ -630,6 +941,22 @@
     </header>
 
     <main>
+        <!-- 搜尋與篩選器區塊 (新增) -->
+        <section class="search-filter-container">
+            <div class="search-wrapper">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" id="searchInput" placeholder="搜尋咖啡名稱、故事標題或內文..." oninput="handleSearchFilter()">
+            </div>
+            <div class="filter-tags">
+                <span class="filter-label">篩選類別:</span>
+                <button class="filter-tag active" data-category="all" onclick="setFilterCategory('all')">全部故事</button>
+                <button class="filter-tag" data-category="曼特寧" onclick="setFilterCategory('曼特寧')">曼特寧</button>
+                <button class="filter-tag" data-category="耶加雪菲" onclick="setFilterCategory('耶加雪菲')">耶加雪菲</button>
+                <button class="filter-tag" data-category="藝伎" onclick="setFilterCategory('藝伎')">藝伎</button>
+                <button class="filter-tag" data-category="其他" onclick="setFilterCategory('其他')">其他</button>
+            </div>
+        </section>
+
         <!-- 時光廊卡片區 -->
         <h2 class="gallery-title">故事時光廊</h2>
         <div class="gallery-grid" id="galleryGrid"></div>
@@ -685,14 +1012,99 @@
         </div>
     </dialog>
 
+    <!-- 原生管理後台彈窗 dialog (新增維護與 CRUD) -->
+    <dialog id="adminDialog" class="admin-dialog" closedby="closerequest" aria-labelledby="adminDialogTitle">
+        <div class="admin-container">
+            <div class="admin-header">
+                <h2 class="admin-title" id="adminDialogTitle">⚙️ 故事維護與管理後台</h2>
+                <button class="dialog-close-btn" onclick="closeAdminDialog()" aria-label="關閉管理頁">×</button>
+            </div>
+            <div class="admin-body">
+                
+                <!-- 1. 現有故事清單 -->
+                <div class="admin-stories-list">
+                    <div class="admin-list-header">
+                        <span>目前上架的故事列表</span>
+                        <button class="btn-action btn-action-primary btn-small" onclick="showAddForm()">➕ 新增故事</button>
+                    </div>
+                    <div id="adminStoriesContainer">
+                        <!-- 故事列表會在此動態渲染 -->
+                    </div>
+                </div>
+
+                <!-- 2. 新增與編輯表單 -->
+                <div class="admin-form-panel" id="adminFormPanel">
+                    <h3 id="formPanelTitle" style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">編輯故事</h3>
+                    <form id="storyEditForm" onsubmit="handleStoryFormSubmit(event)">
+                        <input type="hidden" id="formStoryId">
+                        <div class="form-grid">
+                            <div class="input-group">
+                                <label for="formStoryCode">專屬網址 ID / 編號 (例如：1 或 2，請用純數字)</label>
+                                <input type="text" id="formStoryCode" required placeholder="例如：4">
+                            </div>
+                            <div class="input-group">
+                                <label for="formStoryTag">分類標籤 / 咖啡品項</label>
+                                <input type="text" id="formStoryTag" required placeholder="例如：Vol.04 肯亞">
+                            </div>
+                            <div class="input-group form-full">
+                                <label for="formStoryTitle">故事標題</label>
+                                <input type="text" id="formStoryTitle" required placeholder="輸入故事的文青標題">
+                            </div>
+                            <div class="input-group form-full">
+                                <label for="formStoryCover">封面圖片網址 (Unsplash 或 Cloudinary)</label>
+                                <input type="url" id="formStoryCover" required placeholder="https://images.unsplash.com/...">
+                            </div>
+                            <div class="input-group">
+                                <label for="formStoryType">多模態影音類型</label>
+                                <select id="formStoryType" onchange="toggleFormMediaPlaceholder()">
+                                    <option value="audio">純音訊 (Audio) + 封面圖</option>
+                                    <option value="video">Vlog 影片 (Video)</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label for="formStoryMedia">影音檔案直連網址 (MP3 或 MP4)</label>
+                                <input type="url" id="formStoryMedia" required placeholder="https://...">
+                            </div>
+                            <div class="input-group form-full">
+                                <label for="formStoryExcerpt">故事簡介 (卡片展示，不超過3行)</label>
+                                <textarea id="formStoryExcerpt" rows="2" required placeholder="寫一句能引人點進去讀的咖啡引言..."></textarea>
+                            </div>
+                            <div class="input-group form-full">
+                                <label for="formStoryText">故事全文內容 (斷行會自動轉換)</label>
+                                <textarea id="formStoryText" rows="6" required placeholder="寫下這杯咖啡伴隨的記憶與溫暖文字..."></textarea>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                            <button type="button" class="btn-action btn-small" onclick="hideFormPanel()">取消</button>
+                            <button type="submit" class="btn-action btn-action-primary btn-small">保存變更</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 3. 代碼匯出與永久發布指南 -->
+                <div class="export-section">
+                    <h3>💾 永久保存發布與同步 (Export Data)</h3>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 10px;">
+                        因為這是無後端靜態網頁，您的新增與修改會<strong>即時保存在您這台電腦的瀏覽器中</strong>。如果您想讓其他消費者在掃描 QR Code 時也能看到更新，請點擊下方按鈕複製最新的資料，並將其貼回您專案的 <code>index.html</code> 程式碼中：
+                    </p>
+                    <textarea class="export-textarea" id="exportTextarea" readonly onclick="this.select()"></textarea>
+                    <button class="btn-action btn-action-primary" onclick="copyUpdatedDataCode()">
+                        📋 一鍵複製最新的故事資料結構
+                    </button>
+                </div>
+            </div>
+        </div>
+    </dialog>
+
     <footer>
         <p>© 2026 喝咖聽故事 MVP ｜ 享受重力之外的純粹時光</p>
         <p style="font-size: 0.75rem; opacity: 0.6;">Powered by Antigravity Engine</p>
+        <button class="btn-admin-link" onclick="openAdminDialog()">⚙️ 故事維護與管理後台</button>
     </footer>
 
     <script>
-        // 1. 故事資料庫定義 (多模態故事內容)
-        const storyDatabase = {
+        // 1. 預設的初始故事資料庫
+        const defaultStories = {
             "1": {
                 id: "1",
                 tag: "Vol.01 曼特寧",
@@ -725,23 +1137,96 @@
             }
         };
 
-        // 當前開啟的故事 ID
+        // 2. 初始化加載資料庫
+        let storyDatabase = {};
         let activeStoryId = null;
+        let currentFilterCategory = 'all';
 
-        // 2. 初始化渲染
         document.addEventListener('DOMContentLoaded', () => {
+            initDatabase();
             renderGallery();
             loadComments();
             initTheme();
             handleUrlRouting();
+            updateExportTextarea();
         });
 
-        // 渲染故事卡片
+        // 初始化資料庫 (優先使用 localStorage)
+        function initDatabase() {
+            const localDb = localStorage.getItem('story_database');
+            if (localDb) {
+                try {
+                    storyDatabase = JSON.parse(localDb);
+                } catch(e) {
+                    console.error("解析 LocalStorage 故事庫失敗，重設為預設故事庫", e);
+                    storyDatabase = { ...defaultStories };
+                    localStorage.setItem('story_database', JSON.stringify(storyDatabase));
+                }
+            } else {
+                storyDatabase = { ...defaultStories };
+                localStorage.setItem('story_database', JSON.stringify(storyDatabase));
+            }
+        }
+
+        // ==================== 搜尋與篩選邏輯 (新增) ====================
+        function setFilterCategory(category) {
+            currentFilterCategory = category;
+            
+            // 更新篩選標籤 UI
+            const tags = document.querySelectorAll('.filter-tag');
+            tags.forEach(tag => {
+                if (tag.getAttribute('data-category') === category) {
+                    tag.classList.add('active');
+                } else {
+                    tag.classList.remove('active');
+                }
+            });
+
+            handleSearchFilter();
+        }
+
+        function handleSearchFilter() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            const filteredStories = Object.values(storyDatabase).filter(story => {
+                // 1. 類別篩選
+                let categoryMatch = false;
+                if (currentFilterCategory === 'all') {
+                    categoryMatch = true;
+                } else if (currentFilterCategory === '其他') {
+                    // 不包含曼特寧、耶加雪菲、藝伎的其他咖啡
+                    categoryMatch = !story.tag.includes('曼特寧') && !story.tag.includes('耶加雪菲') && !story.tag.includes('藝伎');
+                } else {
+                    categoryMatch = story.tag.includes(currentFilterCategory);
+                }
+
+                // 2. 關鍵字搜尋 (標題、分類標籤、簡介、全文)
+                const keywordMatch = !query || 
+                    story.title.toLowerCase().includes(query) ||
+                    story.tag.toLowerCase().includes(query) ||
+                    story.excerpt.toLowerCase().includes(query) ||
+                    story.text.toLowerCase().includes(query);
+
+                return categoryMatch && keywordMatch;
+            });
+
+            renderGalleryItems(filteredStories);
+        }
+
+        // 渲染故事卡片至 Gallery 網格
         function renderGallery() {
+            renderGalleryItems(Object.values(storyDatabase));
+        }
+
+        function renderGalleryItems(storiesArray) {
             const grid = document.getElementById('galleryGrid');
             grid.innerHTML = '';
             
-            Object.values(storyDatabase).forEach(story => {
+            if (storiesArray.length === 0) {
+                grid.innerHTML = `<div class="no-results">🔍 找不到符合搜尋或篩選條件的故事。</div>`;
+                return;
+            }
+
+            storiesArray.forEach(story => {
                 const card = document.createElement('article');
                 card.className = 'story-card';
                 card.onclick = () => openStoryDialog(story.id);
@@ -763,7 +1248,7 @@
             });
         }
 
-        // 3. 故事彈窗邏輯
+        // ==================== 故事彈窗邏輯 ====================
         const dialog = document.getElementById('storyDialog');
 
         function openStoryDialog(id) {
@@ -841,7 +1326,7 @@
             });
         }
 
-        // 4. URL 路由與 QR Code 導流核心邏輯
+        // URL 路由與 QR Code 導流核心邏輯
         function handleUrlRouting() {
             const urlParams = new URLSearchParams(window.location.search);
             const queryId = urlParams.get('v'); // 獲取 ?v=1 中的 1
@@ -849,7 +1334,6 @@
             
             const targetId = queryId || hashId;
             if (targetId && storyDatabase[targetId]) {
-                // 為了避免與頁面動畫衝突，稍作延遲再開啟
                 setTimeout(() => {
                     openStoryDialog(targetId);
                 }, 300);
@@ -869,7 +1353,191 @@
             });
         }
 
-        // 5. 留言板功能 (LocalStorage 本地儲存)
+        // ==================== 故事後台管理維護邏輯 (新增 CRUD) ====================
+        const adminDialog = document.getElementById('adminDialog');
+
+        function openAdminDialog() {
+            renderAdminStoriesList();
+            hideFormPanel();
+            updateExportTextarea();
+            adminDialog.showModal();
+        }
+
+        function closeAdminDialog() {
+            adminDialog.close();
+        }
+
+        // 渲染管理後台內的故事列表
+        function renderAdminStoriesList() {
+            const container = document.getElementById('adminStoriesContainer');
+            container.innerHTML = '';
+
+            const stories = Object.values(storyDatabase);
+            if (stories.length === 0) {
+                container.innerHTML = `<p style="padding: 20px; text-align: center; color: var(--text-secondary);">目前尚無故事。點選右上角新增故事！</p>`;
+                return;
+            }
+
+            stories.forEach(story => {
+                const item = document.createElement('div');
+                item.className = 'admin-story-item';
+                item.innerHTML = `
+                    <div class="admin-story-meta">
+                        <img class="admin-story-thumb" src="${story.cover}" alt="縮圖">
+                        <div class="admin-story-info">
+                            <h4>${story.title}</h4>
+                            <p>${story.tag} ｜ 媒體類型: ${story.type === 'video' ? '📹 影片' : '🎵 音訊'}</p>
+                        </div>
+                    </div>
+                    <div class="admin-story-actions">
+                        <button class="btn-action btn-small" onclick="showEditForm('${story.id}')">✏️ 編輯</button>
+                        <button class="btn-action btn-danger btn-small" onclick="deleteStory('${story.id}')">🗑️ 刪除</button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // 顯示編輯/新增表單
+        function showAddForm() {
+            document.getElementById('formPanelTitle').textContent = "➕ 新增故事";
+            document.getElementById('storyEditForm').reset();
+            document.getElementById('formStoryId').value = '';
+            document.getElementById('formStoryCode').disabled = false;
+            
+            // 自動計算下一個推薦 ID
+            const ids = Object.keys(storyDatabase).map(id => parseInt(id)).filter(id => !isNaN(id));
+            const nextId = ids.length > 0 ? Math.max(...ids) + 1 : 1;
+            document.getElementById('formStoryCode').value = nextId;
+
+            document.getElementById('adminFormPanel').classList.add('active');
+            document.getElementById('adminFormPanel').scrollIntoView({ behavior: 'smooth' });
+            toggleFormMediaPlaceholder();
+        }
+
+        function showEditForm(id) {
+            const story = storyDatabase[id];
+            if (!story) return;
+
+            document.getElementById('formPanelTitle').textContent = `✏️ 編輯故事 (ID: ${story.id})`;
+            document.getElementById('formStoryId').value = story.id;
+            document.getElementById('formStoryCode').value = story.id;
+            document.getElementById('formStoryCode').disabled = true; // 故事 ID 唯讀，不可修改
+
+            document.getElementById('formStoryTag').value = story.tag;
+            document.getElementById('formStoryTitle').value = story.title;
+            document.getElementById('formStoryCover').value = story.cover;
+            document.getElementById('formStoryType').value = story.type;
+            document.getElementById('formStoryMedia').value = story.mediaUrl;
+            document.getElementById('formStoryExcerpt').value = story.excerpt;
+            document.getElementById('formStoryText').value = story.text;
+
+            document.getElementById('adminFormPanel').classList.add('active');
+            document.getElementById('adminFormPanel').scrollIntoView({ behavior: 'smooth' });
+            toggleFormMediaPlaceholder();
+        }
+
+        function hideFormPanel() {
+            document.getElementById('adminFormPanel').classList.remove('active');
+        }
+
+        function toggleFormMediaPlaceholder() {
+            const type = document.getElementById('formStoryType').value;
+            const input = document.getElementById('formStoryMedia');
+            if (type === 'video') {
+                input.placeholder = "請輸入 MP4 影片直連網址 (例如：https://assets.mixkit.co/...mp4)";
+            } else {
+                input.placeholder = "請輸入 MP3 音訊直連網址 (例如：https://www.soundhelix.com/...mp3)";
+            }
+        }
+
+        // 新增與修改故事表單提交
+        function handleStoryFormSubmit(event) {
+            event.preventDefault();
+
+            const formId = document.getElementById('formStoryId').value;
+            const code = document.getElementById('formStoryCode').value.trim();
+            const tag = document.getElementById('formStoryTag').value.trim();
+            const title = document.getElementById('formStoryTitle').value.trim();
+            const cover = document.getElementById('formStoryCover').value.trim();
+            const type = document.getElementById('formStoryType').value;
+            const mediaUrl = document.getElementById('formStoryMedia').value.trim();
+            const excerpt = document.getElementById('formStoryExcerpt').value.trim();
+            const text = document.getElementById('formStoryText').value.trim();
+
+            if (!code || !tag || !title || !cover || !mediaUrl || !excerpt || !text) {
+                alert('請完整填寫所有必填欄位！');
+                return;
+            }
+
+            const storyId = formId || code; // 如果是編輯，用原有 ID，若是新增，用填寫的 ID
+
+            // 驗證新增時 ID 是否衝突
+            if (!formId && storyDatabase[storyId]) {
+                alert(`編號 ID: ${storyId} 已存在！請使用其他 ID 或先進行編輯。`);
+                return;
+            }
+
+            const updatedStory = {
+                id: storyId,
+                tag,
+                title,
+                cover,
+                excerpt,
+                type,
+                mediaUrl,
+                text
+            };
+
+            // 寫入/更新資料庫
+            storyDatabase[storyId] = updatedStory;
+            localStorage.setItem('story_database', JSON.stringify(storyDatabase));
+
+            // 更新 UI 與重整列表
+            renderGallery();
+            renderAdminStoriesList();
+            hideFormPanel();
+            updateExportTextarea();
+            alert('故事儲存成功！變更已即時儲存在您本地的瀏覽器。');
+        }
+
+        // 刪除故事
+        function deleteStory(id) {
+            if (!storyDatabase[id]) return;
+            if (!confirm(`確定要刪除「${storyDatabase[id].title}」嗎？這個操作無法復原。`)) return;
+
+            delete storyDatabase[id];
+            localStorage.setItem('story_database', JSON.stringify(storyDatabase));
+
+            renderGallery();
+            renderAdminStoriesList();
+            hideFormPanel();
+            updateExportTextarea();
+        }
+
+        // 更新匯出文本區內容
+        function updateExportTextarea() {
+            const textarea = document.getElementById('exportTextarea');
+            const dataString = JSON.stringify(storyDatabase, null, 4);
+            
+            // 生成可直接貼回 index.html 的程式碼
+            textarea.value = `// 請將 index.html 約第 340 行起的 storyDatabase 物件替換為以下內容：\nconst storyDatabase = ${dataString};`;
+        }
+
+        // 複製最新的故事代碼
+        function copyUpdatedDataCode() {
+            const textarea = document.getElementById('exportTextarea');
+            textarea.select();
+            
+            navigator.clipboard.writeText(textarea.value).then(() => {
+                alert('最新的故事代碼已成功複製！\n\n您可以打開本地專案的 index.html，找到 script 中定義 storyDatabase 的地方（約第 340 行），將其整段替換，然後使用 GitHub Desktop 提交並推送，即可永久將新故事發布上網給所有人看！');
+            }).catch(err => {
+                console.error('複製失敗:', err);
+                alert('請手動選取文本框中的所有代碼進行複製。');
+            });
+        }
+
+        // ==================== 留言板功能 (LocalStorage 本地儲存) ====================
         function handleCommentSubmit(event) {
             event.preventDefault();
             
@@ -897,7 +1565,6 @@
         }
 
         function loadComments() {
-            // 預設留言 (若 localStorage 為空時顯示)
             const defaultComments = [
                 {
                     id: 1,
@@ -944,7 +1611,7 @@
             });
         }
 
-        // 6. 主題切換 (LocalStorage 儲存狀態)
+        // ==================== 主題切換 (LocalStorage 儲存狀態) ====================
         function initTheme() {
             const savedTheme = localStorage.getItem('theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
