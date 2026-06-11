@@ -773,15 +773,21 @@
         <section class="search-filter-container">
             <div class="search-wrapper">
                 <span class="search-icon">🔍</span>
-                <input type="text" class="search-input" id="searchInput" placeholder="搜尋咖啡名稱、故事標題或內文..." oninput="handleSearchFilter()">
+                <input type="text" class="search-input" id="searchInput" placeholder="搜尋主題名稱、故事標題或內文..." oninput="handleSearchFilter()">
             </div>
             <div class="filter-tags">
-                <span class="filter-label">篩選類別:</span>
-                <button class="filter-tag active" data-category="all" onclick="setFilterCategory('all')">全部故事</button>
-                <button class="filter-tag" data-category="曼特寧" onclick="setFilterCategory('曼特寧')">曼特寧</button>
-                <button class="filter-tag" data-category="耶加雪菲" onclick="setFilterCategory('耶加雪菲')">耶加雪菲</button>
-                <button class="filter-tag" data-category="藝伎" onclick="setFilterCategory('藝伎')">藝伎</button>
-                <button class="filter-tag" data-category="其他" onclick="setFilterCategory('其他')">其他</button>
+                <span class="filter-label">篩選主題:</span>
+                <button class="filter-tag active" data-category="all" onclick="setFilterCategory('all')">全部</button>
+                <button class="filter-tag" data-category="愛" onclick="setFilterCategory('愛')">愛</button>
+                <button class="filter-tag" data-category="饒恕" onclick="setFilterCategory('饒恕')">饒恕</button>
+                <button class="filter-tag" data-category="等候" onclick="setFilterCategory('等候')">等候</button>
+                <button class="filter-tag" data-category="盼望" onclick="setFilterCategory('盼望')">盼望</button>
+                <button class="filter-tag" data-category="平安" onclick="setFilterCategory('平安')">平安</button>
+                <button class="filter-tag" data-category="恩典" onclick="setFilterCategory('恩典')">恩典</button>
+                <button class="filter-tag" data-category="陪伴" onclick="setFilterCategory('陪伴')">陪伴</button>
+                <button class="filter-tag" data-category="感恩" onclick="setFilterCategory('感恩')">感恩</button>
+                <button class="filter-tag" data-category="重新開始" onclick="setFilterCategory('重新開始')">重新開始</button>
+                <button class="filter-tag" data-category="回家" onclick="setFilterCategory('回家')">回家</button>
             </div>
         </section>
 
@@ -870,7 +876,7 @@
         const defaultStories = {
             "1": {
                 id: "1",
-                tag: "Vol.01 曼特寧",
+                tag: "Vol.01 愛 / 陪伴",
                 title: "午後的低語：雨中的東京書店",
                 cover: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&auto=format&fit=crop&q=80",
                 excerpt: "熱水緩緩落下，隨著蒸氣升騰的是東京細雨的味道。那年你在轉角舊書店躲雨，遇見了同樣沒帶傘的旅人...",
@@ -880,7 +886,7 @@
             },
             "2": {
                 id: "2",
-                tag: "Vol.02 耶加雪菲",
+                tag: "Vol.02 等候 / 盼望",
                 title: "微酸的記憶：那年夏天的海風",
                 cover: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&auto=format&fit=crop&q=80",
                 excerpt: "耶加雪菲特有的柑橘微酸，一入口，就把你帶回了花蓮的那片海。浪花拍打著腳踝，收音機裡放著模糊的歌...",
@@ -890,13 +896,13 @@
             },
             "3": {
                 id: "3",
-                tag: "Vol.03 藝伎 Geisha",
+                tag: "Vol.03 恩典 / 平安",
                 title: "晨曦微光：衣索比亞高原的低喃",
                 cover: "https://images.unsplash.com/photo-1507133750040-4a8f57021571?w=600&auto=format&fit=crop&q=80",
                 excerpt: "佛手柑與水蜜桃的精緻芬芳，如同高山清晨的第一縷陽光。這不僅僅是一杯咖啡，更是一次靈魂的甦醒...",
                 type: "audio",
                 mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
-                text: "佛手柑與水蜜桃的精緻芬芳，如同衣索比亞高原清晨的第一縷晨曦陽光，撥開了層層雲霧。\n\n這不僅僅是一杯咖啡，更是一次靈魂的甦醒。在喧囂都市的清晨，你拉開窗簾，聽著這款極具花香層次感的藝伎低喃，彷彿能看見咖啡農夫在薄霧中採摘鮮紅漿果的純粹身影。\n\n沉靜下來，給自己五分鐘。在花香繚繞中，重拾面對一整天挑戰的勇氣。"
+                text: "佛手柑與水蜜桃的精緻芬芳，如同衣索比亞高原清晨的第一縷晨曦陽光，撥開了層層雲霧。\n\n這不僅僅是一杯咖啡，更是一次靈魂的甦醒。在喧囂都市 of 清晨，你拉開窗簾，聽著這款極具花香層次感的藝伎低喃，彷彿能看見咖啡農夫在薄霧中採摘鮮紅漿果的純粹身影。\n\n沉靜下來，給自己五分鐘。在花香繚繞中，重拾面對一整天挑戰的勇氣。"
             }
         };
 
@@ -1003,8 +1009,6 @@
                 let categoryMatch = false;
                 if (currentFilterCategory === 'all') {
                     categoryMatch = true;
-                } else if (currentFilterCategory === '其他') {
-                    categoryMatch = !story.tag.includes('曼特寧') && !story.tag.includes('耶加雪菲') && !story.tag.includes('藝伎');
                 } else {
                     categoryMatch = story.tag.includes(currentFilterCategory);
                 }
