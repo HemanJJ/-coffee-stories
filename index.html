@@ -3,41 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="咖啡時光廊 - 聽故事、說故事、看故事。透過耳掛包 QR Code 連結每杯咖啡的專屬多模態回憶，享受您的專屬咖啡時光。">
-    <title>咖啡時光廊 ｜ 聽咖啡說故事</title>
+    <meta name="description" content="咖啡時光廊 - 十杯咖啡，十段關於愛、饒恕、等候、盼望與回家的原創共情故事。掃描耳掛包 QR Code，進入一杯咖啡的安靜時光。">
+    <title>咖啡時光廊 ｜ 十杯咖啡的故事</title>
     
-    <!-- 引入優雅的 Noto Serif TC (故事用) 與 Inter (介面用) 字型 -->
+    <!-- 引入優雅的 Noto Serif TC (故事用) 與 Noto Sans TC (介面用) 字型 -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Serif+TC:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600&family=Noto+Serif+TC:wght@400;600;700;900&display=swap" rel="stylesheet">
     
     <style>
         /* CSS 變數定義：支援暖色系 Light/Dark 模式 */
         :root {
-            --bg-primary: #fcfaf7;
-            --bg-secondary: #f5ede2;
-            --text-primary: #2c1f17;
-            --text-secondary: #6e5849;
-            --accent: #8e684d;
-            --accent-hover: #73513a;
-            --card-bg: #ffffff;
-            --border-color: #ebdcd0;
-            --shadow: 0 8px 30px rgba(44, 31, 23, 0.04);
+            --bg-primary: #fff8ee;
+            --bg-secondary: #f4e3cc;
+            --text-primary: #2a1810;
+            --text-secondary: #735b4a;
+            --accent: #a45f38;
+            --accent-hover: #7e4425;
+            --accent-soft: #f3c995;
+            --card-bg: rgba(255, 252, 246, 0.86);
+            --border-color: rgba(126, 68, 37, 0.18);
+            --shadow: 0 22px 60px rgba(72, 39, 20, 0.10);
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             --font-serif: 'Noto Serif TC', serif;
-            --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
-            --max-width: 1000px;
+            --font-sans: 'Noto Sans TC', system-ui, -apple-system, sans-serif;
+            --max-width: 1120px;
         }
 
         [data-theme="dark"] {
-            --bg-primary: #120d0a;
-            --bg-secondary: #1a120d;
-            --text-primary: #f5ebe0;
-            --text-secondary: #c9bcae;
-            --accent: #dca780;
-            --accent-hover: #ebbfa0;
-            --card-bg: #1e150f;
-            --border-color: #2d1f16;
+            --bg-primary: #130c08;
+            --bg-secondary: #25160f;
+            --text-primary: #fff3e6;
+            --text-secondary: #d6bfa8;
+            --accent: #f0ae73;
+            --accent-hover: #ffd0a3;
+            --accent-soft: #6f3c20;
+            --card-bg: rgba(33, 21, 14, 0.86);
+            --border-color: rgba(240, 174, 115, 0.18);
             --shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
         }
 
@@ -49,12 +51,22 @@
         }
 
         body {
-            background-color: var(--bg-primary);
+            background:
+                radial-gradient(circle at top left, rgba(240, 174, 115, 0.22), transparent 32rem),
+                radial-gradient(circle at 90% 12%, rgba(164, 95, 56, 0.18), transparent 26rem),
+                linear-gradient(180deg, var(--bg-primary) 0%, #fffdf8 52%, var(--bg-secondary) 100%);
             color: var(--text-primary);
             font-family: var(--font-sans);
             line-height: 1.6;
             transition: var(--transition);
             overflow-x: hidden;
+        }
+
+        [data-theme="dark"] body {
+            background:
+                radial-gradient(circle at top left, rgba(240, 174, 115, 0.14), transparent 32rem),
+                radial-gradient(circle at 90% 12%, rgba(164, 95, 56, 0.16), transparent 26rem),
+                linear-gradient(180deg, var(--bg-primary) 0%, #0f0906 52%, var(--bg-secondary) 100%);
         }
 
         /* 隱藏滾動條但保持滾動 */
@@ -74,11 +86,41 @@
 
         /* 精美首頁頁首 */
         header {
-            padding: 60px 20px 40px;
+            padding: 76px 20px 58px;
             text-align: center;
-            background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+            background:
+                linear-gradient(rgba(42, 24, 16, 0.16), rgba(42, 24, 16, 0.02)),
+                linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(244, 227, 204, 0.72));
             border-bottom: 1px solid var(--border-color);
             position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            inset: 16px;
+            border: 1px solid rgba(164, 95, 56, 0.14);
+            border-radius: 28px;
+            pointer-events: none;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            right: -7rem;
+            bottom: -9rem;
+            width: 22rem;
+            height: 22rem;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(164, 95, 56, 0.20), transparent 68%);
+            pointer-events: none;
+        }
+
+        [data-theme="dark"] header {
+            background:
+                linear-gradient(rgba(5, 3, 2, 0.58), rgba(19, 12, 8, 0.52)),
+                linear-gradient(135deg, rgba(52, 31, 20, 0.86), rgba(24, 14, 9, 0.92));
         }
 
         /* 主題切換按鈕 */
@@ -111,11 +153,11 @@
 
         .logo {
             font-family: var(--font-serif);
-            font-size: 2.5rem;
-            font-weight: 700;
+            font-size: clamp(2.4rem, 7vw, 5.2rem);
+            font-weight: 900;
             color: var(--text-primary);
             margin-bottom: 12px;
-            letter-spacing: 2px;
+            letter-spacing: 0.12em;
             position: relative;
             display: inline-block;
         }
@@ -133,26 +175,67 @@
 
         header p {
             color: var(--text-secondary);
-            font-size: 1.05rem;
+            font-size: 1.08rem;
             font-weight: 300;
             margin-top: 15px;
             letter-spacing: 1px;
+        }
+
+        .hero-kicker {
+            color: var(--accent);
+            font-size: 0.82rem;
+            font-weight: 600;
+            letter-spacing: 0.22em;
+            margin-bottom: 18px;
+            text-transform: uppercase;
+        }
+
+        .hero-note {
+            max-width: 680px;
+            margin: 24px auto 0;
+            color: var(--text-secondary);
+            font-family: var(--font-serif);
+            font-size: clamp(1.08rem, 2.3vw, 1.4rem);
+            line-height: 1.9;
+        }
+
+        .ritual-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 26px;
+        }
+
+        .ritual-chip {
+            background: rgba(255, 252, 246, 0.72);
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+            color: var(--text-secondary);
+            font-size: 0.84rem;
+            padding: 8px 14px;
+            backdrop-filter: blur(10px);
+        }
+
+        [data-theme="dark"] .ritual-chip {
+            background: rgba(33, 21, 14, 0.72);
         }
 
         /* 主要內容區 */
         main {
             max-width: var(--max-width);
             margin: 0 auto;
-            padding: 40px 20px;
+            padding: 46px 20px;
         }
 
         /* 搜尋與篩選列 */
         .search-filter-container {
             background-color: var(--card-bg);
+            backdrop-filter: blur(18px);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 40px;
+            border-radius: 24px;
+            padding: 22px;
+            margin-bottom: 46px;
             box-shadow: var(--shadow);
             display: flex;
             flex-direction: column;
@@ -170,7 +253,7 @@
             border: 1px solid var(--border-color);
             color: var(--text-primary);
             padding: 12px 16px 12px 40px;
-            border-radius: 8px;
+            border-radius: 999px;
             font-family: var(--font-sans);
             font-size: 0.95rem;
             outline: none;
@@ -207,11 +290,11 @@
         }
 
         .filter-tag {
-            background-color: var(--bg-secondary);
+            background-color: rgba(244, 227, 204, 0.66);
             color: var(--text-secondary);
             border: 1px solid transparent;
             padding: 6px 14px;
-            border-radius: 20px;
+            border-radius: 999px;
             font-size: 0.85rem;
             cursor: pointer;
             transition: var(--transition);
@@ -231,7 +314,7 @@
         /* 故事網格 */
         .gallery-title {
             font-family: var(--font-serif);
-            font-size: 1.6rem;
+            font-size: 1.8rem;
             margin-bottom: 25px;
             color: var(--text-primary);
             display: flex;
@@ -248,8 +331,8 @@
 
         .gallery-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
             margin-bottom: 60px;
         }
 
@@ -282,7 +365,7 @@
         .story-card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 16px;
+            border-radius: 24px;
             overflow: hidden;
             box-shadow: var(--shadow);
             cursor: pointer;
@@ -301,7 +384,7 @@
         .card-image-wrapper {
             position: relative;
             width: 100%;
-            height: 220px;
+            height: 238px;
             overflow: hidden;
         }
 
@@ -310,6 +393,7 @@
             height: 100%;
             object-fit: cover;
             transition: var(--transition);
+            filter: saturate(0.94) contrast(1.02);
         }
 
         .story-card:hover .card-image {
@@ -320,18 +404,18 @@
             position: absolute;
             top: 15px;
             left: 15px;
-            background-color: rgba(44, 31, 23, 0.85);
+            background-color: rgba(42, 24, 16, 0.78);
             backdrop-filter: blur(4px);
             color: #f5ebe0;
-            padding: 4px 12px;
-            border-radius: 20px;
+            padding: 6px 13px;
+            border-radius: 999px;
             font-size: 0.75rem;
             letter-spacing: 1px;
             z-index: 2;
         }
 
         .card-content {
-            padding: 20px;
+            padding: 22px;
             display: flex;
             flex-direction: column;
             flex-grow: 1;
@@ -339,7 +423,7 @@
 
         .card-title {
             font-family: var(--font-serif);
-            font-size: 1.25rem;
+            font-size: 1.28rem;
             color: var(--text-primary);
             margin-bottom: 10px;
             line-height: 1.4;
@@ -347,7 +431,7 @@
 
         .card-excerpt {
             color: var(--text-secondary);
-            font-size: 0.9rem;
+            font-size: 0.92rem;
             font-weight: 300;
             line-height: 1.6;
             margin-bottom: 20px;
@@ -361,6 +445,7 @@
             margin-top: auto;
             font-size: 0.8rem;
             color: var(--accent);
+            letter-spacing: 0.02em;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -369,7 +454,7 @@
         /* 互動式 Guestbook 區塊 */
         .guestbook-section {
             background-color: var(--bg-secondary);
-            border-radius: 20px;
+            border-radius: 28px;
             padding: 35px;
             border: 1px solid var(--border-color);
             margin-top: 40px;
@@ -728,10 +813,18 @@
         /* 行動端介面適配 */
         @media (max-width: 600px) {
             header {
-                padding: 40px 15px 30px;
+                padding: 72px 15px 34px;
             }
             .logo {
                 font-size: 1.8rem;
+            }
+            .theme-toggle-btn {
+                top: 18px;
+                right: 50%;
+                transform: translateX(50%);
+            }
+            .theme-toggle-btn:hover {
+                transform: translateX(50%) translateY(-2px);
             }
             main {
                 padding: 20px 15px;
@@ -763,8 +856,24 @@
             <span id="themeBtnText">🌓 切換深色</span>
         </button>
         <div class="header-container">
+            <div class="hero-kicker">QR Coffee Story Gallery</div>
             <h1 class="logo">咖啡時光廊</h1>
-            <p>撕開包裝，注入熱水。聽咖啡說故事，留下您的專屬記憶。</p>
+            <p>撕開包裝，注入熱水。讓一杯咖啡，把心慢慢帶回來。</p>
+            <div class="hero-note">
+                十個主題，十段像耳掛包一樣輕巧的故事。適合掃碼後安靜讀，也適合一邊喝、一邊聽見自己的生活。
+            </div>
+            <div class="ritual-list" aria-label="故事主題">
+                <span class="ritual-chip">愛</span>
+                <span class="ritual-chip">饒恕</span>
+                <span class="ritual-chip">等候</span>
+                <span class="ritual-chip">盼望</span>
+                <span class="ritual-chip">平安</span>
+                <span class="ritual-chip">恩典</span>
+                <span class="ritual-chip">陪伴</span>
+                <span class="ritual-chip">感恩</span>
+                <span class="ritual-chip">重新開始</span>
+                <span class="ritual-chip">回家</span>
+            </div>
         </div>
     </header>
 
@@ -853,8 +962,8 @@
     </dialog>
 
     <footer>
-        <p>© 2026 喝咖聽故事 MVP ｜ 享受重力之外的純粹時光</p>
-        <p style="font-size: 0.75rem; opacity: 0.6;">Powered by Antigravity Engine</p>
+        <p>© 2026 喝咖聽故事 ｜ 十杯咖啡，十段可以慢慢讀的心事</p>
+        <p style="font-size: 0.75rem; opacity: 0.6;">MVP for drip-bag coffee QR storytelling</p>
         
         <!-- 資料來源提示 -->
         <div class="data-source-wrapper">
@@ -870,39 +979,109 @@
         // 請在此處填入您的 Google 試算表 ID。
         // 例如：https://docs.google.com/spreadsheets/d/12345abcdefg/edit 中的 '12345abcdefg'
         // 注意：試算表必須設定為「知道連結的人均可檢視」，並且在選單點選「檔案 ➔ 共用 ➔ 發布到網路」！
-        const GOOGLE_SHEET_ID = '14ZrPIdEuLUPAz3sjWpJCUxn1AiD0svrGj_9ntERvtfU'; 
+        const GOOGLE_SHEET_ID = '';
 
         // 預設的初始本地故事資料庫 (若試算表未設定或載入失敗時的備用/降級方案)
         const defaultStories = {
             "1": {
                 id: "1",
-                tag: "Vol.01 愛 / 陪伴",
-                title: "午後的低語：雨中的東京書店",
-                cover: "https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?w=600&auto=format&fit=crop&q=80",
-                excerpt: "熱水緩緩落下，隨著蒸氣升騰的是東京細雨的味道。那年你在轉角舊書店躲雨，遇見了同樣沒帶傘的旅人...",
+                tag: "Vol.01 愛",
+                title: "留給你的半杯拿鐵",
+                cover: "https://images.unsplash.com/photo-1498804103079-a6351b050096?w=900&auto=format&fit=crop&q=82",
+                excerpt: "他們沒有說過很多漂亮的話，只是每天清晨把第一口咖啡留給對方。後來她才明白，愛常常不是熱烈，是有人記得你的溫度。",
                 type: "video",
                 mediaUrl: "https://assets.mixkit.co/videos/preview/mixkit-coffee-is-poured-into-a-cup-32881-large.mp4",
-                text: "熱水緩緩落下，隨著蒸氣升騰的是東京細雨的味道。\n\n那年你在神保町轉角的舊書店躲雨，書架旁飄散著淡淡的油墨香氣。你拍拍外套上的水珠，轉身便遇見了同樣沒有帶傘的旅人，他手裡正捧著一本泛黃的詩集。\n\n「你也喜歡讀這首詩嗎？」他指了指扉頁。\n\n咖啡的甘苦與當年的青澀，在今天下午的這杯曼特寧溫熱中，完美地重疊、融合。"
+                text: "她一直以為父親不太會愛人。\n\n母親走後，家裡安靜得像一只忘了上弦的鐘。父親每天早上仍煮兩杯咖啡，一杯黑咖啡給自己，一杯加很多奶，放在餐桌靠窗的位置。她看了幾次，終於忍不住說：「媽已經不在了。」\n\n父親沒有抬頭，只把那杯拿鐵往她面前推了推：「我知道。可是妳以前都偷喝她那杯。」\n\n那天她握著溫熱的杯子，忽然想起很多細節。雨天門口多出來的傘，便當盒裡被挑掉的蔥，深夜客廳那盞等她回家的燈。原來愛不一定會說出口，它有時只是半杯拿鐵，放在你剛好伸手碰得到的地方。\n\n咖啡喝到最後有一點苦，她卻第一次覺得，苦味也可以很甜。"
             },
             "2": {
                 id: "2",
-                tag: "Vol.02 等候 / 盼望",
-                title: "微酸的記憶：那年夏天的海風",
-                cover: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=600&auto=format&fit=crop&q=80",
-                excerpt: "耶加雪菲特有的柑橘微酸，一入口，就把你帶回了花蓮的那片海。浪花拍打著腳踝，收音機裡放著模糊的歌...",
+                tag: "Vol.02 饒恕",
+                title: "沒有寄出的道歉信",
+                cover: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=900&auto=format&fit=crop&q=82",
+                excerpt: "他把道歉信放在抽屜最底層三年，直到某個下雨的下午，才發現饒恕不是讓過去沒發生，而是讓自己終於不用再住在那一天。",
                 type: "audio",
                 mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
-                text: "耶加雪菲特有的柑橘與茉莉微酸，甫一入口，那一股微風就把你帶回了花蓮的那片盛夏之海。\n\n浪花溫柔地拍打著腳踝，沙灘上散落著貝殼與回憶。你們並肩坐在漂流木上，身旁的收音機正放著模糊的獨立樂團歌曲，歌聲有些沙啞，但那時我們都相信世界可以被歌聲改變。\n\n那是我們決定不帶行李、隨性出發流浪的起點。如今，那股微酸的柑橘香氣，依舊如同海風般乾淨。"
+                text: "信封泛黃的時候，他才承認自己其實一直在等一個機會。\n\n三年前，他和哥哥為了父親留下的小店吵到翻臉。最重的那句話是他說的：「你根本不配回這個家。」哥哥那天沒有回嘴，只把鑰匙放在櫃台上，轉身走進雨裡。\n\n後來他寫過一封道歉信，開頭改了十七次，結尾永遠停在「對不起」。他不敢寄，像是不寄出，錯就還沒有被正式承認。\n\n直到某天午後，一位老客人推門進來，說哥哥在隔壁城市開了間小咖啡攤，招牌上仍寫著父親的老字號。老客人喝著咖啡笑了笑：「他說，等你有空，可以過去坐坐。」\n\n他搭最晚一班車去。哥哥看見他，只問：「還喝以前那種嗎？」\n\n那一刻他才懂，饒恕不是把傷口說成沒痛過，而是有人願意在傷口旁邊，多放一張椅子。"
             },
             "3": {
                 id: "3",
-                tag: "Vol.03 恩典 / 平安",
-                title: "晨曦微光：衣索比亞高原的低喃",
-                cover: "https://images.unsplash.com/photo-1507133750040-4a8f57021571?w=600&auto=format&fit=crop&q=80",
-                excerpt: "佛手柑與水蜜桃的精緻芬芳，如同高山清晨的第一縷陽光。這不僅僅是一杯咖啡，更是一次靈魂的甦醒...",
+                tag: "Vol.03 等候",
+                title: "第七班公車",
+                cover: "https://images.unsplash.com/photo-1517457373958-b7bdd4587205?w=900&auto=format&fit=crop&q=82",
+                excerpt: "她每天等同一班公車，不是因為那班最快，而是因為司機總會多停三秒。那些三秒，讓她重新相信世界還留著位置給慢一點的人。",
                 type: "audio",
                 mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
-                text: "佛手柑與水蜜桃的精緻芬芳，如同衣索比亞高原清晨的第一縷晨曦陽光，撥開了層層雲霧。\n\n這不僅僅是一杯咖啡，更是一次靈魂的甦醒。在喧囂都市 of 清晨，你拉開窗簾，聽著這款極具花香層次感的藝伎低喃，彷彿能看見咖啡農夫在薄霧中採摘鮮紅漿果的純粹身影。\n\n沉靜下來，給自己五分鐘。在花香繚繞中，重拾面對一整天挑戰的勇氣。"
+                text: "小芸的復健課在早上九點，她卻七點半就出門。\n\n車站離家只有五分鐘，但她走了二十分鐘。中風後的右腳不太聽話，每一步都像在和地面重新談判。前幾次，她總在公車關門前差一點趕上，司機看見她喘著氣，也只能抱歉地開走。\n\n直到第七班公車的司機開始等她。\n\n他沒有說什麼偉大的話，只是每天多停三秒。有時三秒剛好夠她走上第一階，有時不夠，他就再等三秒。車上的人偶爾皺眉，司機便說：「大家都會有走慢的一天。」\n\n半年後，小芸終於能穩穩走上車。她把一包耳掛咖啡放在投幣箱旁，小聲說謝謝。\n\n等候不是浪費時間。等候是有人相信，你正在用自己的速度回到生活裡。"
+            },
+            "4": {
+                id: "4",
+                tag: "Vol.04 盼望",
+                title: "窗台上的小芽",
+                cover: "https://images.unsplash.com/photo-1466692476868-aef1dfb1e735?w=900&auto=format&fit=crop&q=82",
+                excerpt: "失業後的第三十天，他把咖啡渣埋進空盆。那株小芽沒有替他解決人生，卻每天用一點點綠意提醒他：不是所有沉默都叫結束。",
+                type: "audio",
+                mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3",
+                text: "失業後的第三十天，他開始害怕手機震動。\n\n每一封沒有下文的履歷，都像一扇輕輕關上的門。他把鬧鐘關掉，窗簾拉上，連咖啡都只泡半杯，彷彿少喝一點，就能少感覺到自己還醒著。\n\n有天整理桌面，他看見母親寄來的訊息：「咖啡渣別丟，可以給土一點養分。」他笑了，覺得這句話荒唐又溫柔。家裡唯一的盆栽早就枯了，他還是把咖啡渣倒進去，澆了一點水。\n\n一週後，土裡冒出一點綠。\n\n那不是奇蹟，只是一株不知道從哪裡來的小芽。它很小，小到不能改變房租、面試和焦慮，可是每天早上，它都比昨天高一點點。\n\n他重新拉開窗簾，泡了一整杯咖啡。盼望有時不是遠方的大光，而是窗台上一點點綠，提醒你：生命還在往上。"
+            },
+            "5": {
+                id: "5",
+                tag: "Vol.05 平安",
+                title: "雨夜值班室",
+                cover: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=900&auto=format&fit=crop&q=82",
+                excerpt: "急診室外的雨下了一整晚。她以為自己需要答案，後來才發現，在最慌的時候，有人陪你把一杯熱咖啡慢慢喝完，就是平安。",
+                type: "video",
+                mediaUrl: "https://assets.mixkit.co/videos/preview/mixkit-pouring-coffee-in-a-cup-seen-up-close-4450-large.mp4",
+                text: "那晚雨很大，大到城市的聲音都被沖淡了。\n\n她坐在急診室外，手裡的號碼單被捏得皺成一團。父親在裡面檢查，醫師還沒出來。她一直滑手機，卻不知道自己在看什麼，只覺得每一分鐘都像被拉長。\n\n清潔阿姨推著車經過，停下來看了她一眼，從保溫袋拿出一杯咖啡：「我多買的，妳拿著。」\n\n她愣住，說不用。阿姨把咖啡放到她旁邊：「不用堅強，先喝熱的。」\n\n那杯咖啡其實很普通，便利商店的深焙，還有一點燙。但她用雙手捧著，忽然不再只聽見心跳聲。雨還在下，檢查還沒有結果，可是她的呼吸慢慢回來了。\n\n平安不是事情立刻變好。平安是風雨還在，你卻被一點溫度接住。"
+            },
+            "6": {
+                id: "6",
+                tag: "Vol.06 恩典",
+                title: "多出來的一張早餐券",
+                cover: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=900&auto=format&fit=crop&q=82",
+                excerpt: "他只是把多出來的早餐券送給陌生人，沒想到多年後，那張券繞了一圈，變成某個早晨放在他桌上的熱咖啡。",
+                type: "audio",
+                mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3",
+                text: "年輕時，他常去車站旁那間早餐店。\n\n有一次店員不小心多給他一張早餐券，他本來想退回去，卻看見門口有個學生翻著口袋，臉紅地問能不能晚點付。他走過去，把券遞給對方：「我今天剛好多一張。」\n\n那件事小到他很快就忘了。\n\n二十年後，他的公司倒了。中年人的失敗比較安靜，不會大哭大鬧，只是在早餐店點餐時，突然算起口袋裡還剩多少零錢。他坐在角落，假裝看報紙，心裡卻一片空。\n\n店員送來一份早餐和一杯咖啡，說：「有人替您付了。」\n\n櫃台旁站著一個西裝筆挺的男人，對他笑了笑：「以前在車站，有人也替我付過一頓早餐。」\n\n恩典常常不是從天上掉下來，它會借人的手，繞很遠的路，最後在你最需要的早晨，重新回到桌上。"
+            },
+            "7": {
+                id: "7",
+                tag: "Vol.07 陪伴",
+                title: "慢慢走的人",
+                cover: "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=900&auto=format&fit=crop&q=82",
+                excerpt: "外婆走得越來越慢，他也終於學會把行程排得越來越空。陪伴不是替對方走完路，而是願意把自己的速度借給他。",
+                type: "audio",
+                mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3",
+                text: "外婆以前走路很快。\n\n她能一手提菜、一手牽他，穿過整個市場，還能準確記得哪攤番茄比較甜。後來外婆老了，走到巷口都要停三次。他一開始總忍不住看錶，提醒自己下一個會議還有多久。\n\n某個週日，他照例陪外婆去買咖啡豆。外婆在斑馬線前停下來，喘了一口氣，忽然說：「你如果忙，可以不用陪我。」\n\n他想說不忙，卻發現自己真的一直在急。\n\n那天他把手機關成靜音，陪外婆坐在路邊長椅。外婆說年輕時第一次喝咖啡，苦得皺眉，卻因為外公說香，她就學著喝。她說得很慢，他聽得也很慢。\n\n後來他才明白，陪伴不是把對方推到目的地，而是願意把自己的速度放低，和他一起經過那些再普通不過的街角。"
+            },
+            "8": {
+                id: "8",
+                tag: "Vol.08 感恩",
+                title: "收據背面的謝謝",
+                cover: "https://images.unsplash.com/photo-1453614512568-c4024d13c247?w=900&auto=format&fit=crop&q=82",
+                excerpt: "她每天買同一杯咖啡，直到離職那天才知道，自己隨手寫在收據背面的謝謝，曾經陪店員撐過很長一段低潮。",
+                type: "audio",
+                mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3",
+                text: "她每天早上八點二十買一杯美式，不加糖。\n\n店員總是把杯蓋壓得很緊，提醒她小心燙。她也總是把收據翻到背面，寫一句「謝謝，今天也辛苦了」，再放進桌上的小盒子。她以為那只是自己的小習慣，像整理包包、擦掉杯口的水珠一樣微不足道。\n\n離職前一天，她最後一次走進咖啡店。店員認出她，從櫃台拿出一個信封，裡面是一疊收據。\n\n每張背面都有她的字。\n\n店員有些不好意思地說：「我剛來的時候常被客人罵，有幾次真的想辭職。可是每天看到妳寫那句話，就覺得也許我今天還可以撐一下。」\n\n她站在原地，忽然不知道該說什麼。\n\n感恩有時不是盛大的回報，只是一句真心的謝謝。你以為它輕得像紙，卻可能剛好成為某個人那天沒有放棄的重量。"
+            },
+            "9": {
+                id: "9",
+                tag: "Vol.09 重新開始",
+                title: "星期一的空白杯",
+                cover: "https://images.unsplash.com/photo-1521017432531-fbd92d768814?w=900&auto=format&fit=crop&q=82",
+                excerpt: "她把辭職信寄出的那天，買了一只沒有圖案的白杯。不是因為她不害怕，而是因為空白終於不再像失去，而像可以重寫。",
+                type: "audio",
+                mediaUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3",
+                text: "她在同一家公司待了九年。\n\n九年足夠讓一個人熟悉影印機的脾氣、主管的語氣，以及自己每天把夢想往後挪一點的方式。她常說「等忙完這陣子」，可是這陣子一等就是九年。\n\n辭職信寄出的星期一，她沒有想像中的瀟灑。她在咖啡店坐了很久，手心一直冒汗，像是剛從一艘大船跳進水裡，還不知道岸在哪裡。\n\n店裡架上有一只白色馬克杯，沒有花紋，沒有標語。她買下來，請店員倒一杯熱拿鐵。\n\n杯子太白了，白得讓她有點害怕。可是喝到一半，她突然覺得，空白也許不是什麼都沒有，而是還沒有被寫壞。\n\n重新開始不是不怕，而是帶著害怕，仍然替明天留一只乾淨的杯子。"
+            },
+            "10": {
+                id: "10",
+                tag: "Vol.10 回家",
+                title: "巷口那盞燈",
+                cover: "https://images.unsplash.com/photo-1517701604599-bb29b565090c?w=900&auto=format&fit=crop&q=82",
+                excerpt: "他離家很久，以為回家需要一個完美理由。直到看見巷口那盞還亮著的燈，才知道有些地方不問你成敗，只問你餓不餓。",
+                type: "video",
+                mediaUrl: "https://assets.mixkit.co/videos/preview/mixkit-serving-a-cup-of-coffee-31518-large.mp4",
+                text: "他已經三年沒有回家過年。\n\n每次母親打電話來，他都說工作忙。真正的原因其實很小，也很重：創業失敗後，他不知道該怎麼面對那些關心。親戚的問題、父親的沉默、母親故作輕鬆的語氣，都像一杯放冷的咖啡，苦得他不敢碰。\n\n除夕前一晚，他臨時買了車票。到家時已經十一點多，巷子裡的店都關了，只有家門口那盞黃燈還亮著。\n\n他站了很久，才按下門鈴。\n\n母親開門的第一句不是「你怎麼現在才回來」，也不是「事情處理好了嗎」。她只是把拖鞋推到他腳邊，說：「冰箱有滷肉，我去熱。你要不要先喝咖啡？」\n\n那一刻，他突然很想哭。\n\n回家原來不是證明自己過得很好。回家是有一個地方，知道你狼狽，仍然替你留燈、留飯，也留一個可以重新坐下的位置。"
             }
         };
 
@@ -1219,16 +1398,16 @@
             const defaultComments = [
                 {
                     id: 1,
-                    author: "文青旅人",
-                    coffee: "Vol.01 曼特寧",
-                    content: "今天點了這款咖啡，掃碼看到東京書店的故事，那一瞬間，嘴裡的苦味突然多了一絲溫暖的厚度，真是美妙的設計！",
+                    author: "加奶不加糖",
+                    coffee: "Vol.01 愛",
+                    content: "讀到半杯拿鐵那篇，突然想起家人很多不說出口的照顧。原來愛真的常常藏在很小的地方。",
                     date: "2026-06-11 16:30"
                 },
                 {
                     id: 2,
-                    author: "海風吹吹",
-                    coffee: "Vol.02 耶加雪菲",
-                    content: "耶加雪菲的微酸真的跟海風故事超搭！一邊聽著海浪音樂，一邊喝著帶酸甜柑橘味的咖啡，感覺整個人回到了花蓮的假期。",
+                    author: "巷口慢慢走",
+                    coffee: "Vol.07 陪伴",
+                    content: "陪伴那篇很安靜，但很打中。不是把人拉快，而是願意一起變慢，這句會留在我今天的咖啡裡。",
                     date: "2026-06-11 17:15"
                 }
             ];
