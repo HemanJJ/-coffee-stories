@@ -230,9 +230,10 @@
 
         /* 搜尋與篩選列 */
         .search-filter-container {
-            background-color: var(--card-bg);
+            background:
+                linear-gradient(145deg, rgba(255, 248, 238, 0.92), rgba(249, 229, 201, 0.72));
             backdrop-filter: blur(18px);
-            border: 1px solid var(--border-color);
+            border: 1px solid rgba(164, 95, 56, 0.22);
             border-radius: 24px;
             padding: 22px;
             margin-bottom: 46px;
@@ -242,6 +243,12 @@
             gap: 15px;
         }
 
+        [data-theme="dark"] .search-filter-container {
+            background:
+                linear-gradient(145deg, rgba(37, 22, 15, 0.96), rgba(25, 14, 9, 0.92));
+            border-color: rgba(240, 174, 115, 0.28);
+        }
+
         .search-wrapper {
             position: relative;
             width: 100%;
@@ -249,10 +256,10 @@
 
         .search-input {
             width: 100%;
-            background-color: var(--bg-primary);
-            border: 1px solid var(--border-color);
+            background-color: rgba(255, 252, 246, 0.88);
+            border: 1px solid rgba(164, 95, 56, 0.2);
             color: var(--text-primary);
-            padding: 12px 16px 12px 40px;
+            padding: 13px 18px 13px 46px;
             border-radius: 999px;
             font-family: var(--font-sans);
             font-size: 0.95rem;
@@ -260,19 +267,57 @@
             transition: var(--transition);
         }
 
+        [data-theme="dark"] .search-input {
+            background-color: rgba(16, 9, 5, 0.9);
+            border-color: rgba(240, 174, 115, 0.28);
+            color: #fff4e8;
+        }
+
+        .search-input::placeholder {
+            color: rgba(115, 91, 74, 0.72);
+        }
+
+        [data-theme="dark"] .search-input::placeholder {
+            color: rgba(214, 191, 168, 0.68);
+        }
+
         .search-input:focus {
             border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(142, 104, 77, 0.15);
+            box-shadow: 0 0 0 3px rgba(240, 174, 115, 0.18);
         }
 
         .search-icon {
             position: absolute;
-            left: 15px;
+            left: 18px;
             top: 50%;
             transform: translateY(-50%);
-            color: var(--text-secondary);
-            opacity: 0.6;
-            font-size: 0.95rem;
+            width: 15px;
+            height: 15px;
+            border: 2px solid rgba(164, 95, 56, 0.62);
+            border-radius: 50%;
+            font-size: 0;
+            pointer-events: none;
+        }
+
+        .search-icon::after {
+            content: '';
+            position: absolute;
+            right: -6px;
+            bottom: -4px;
+            width: 8px;
+            height: 2px;
+            background: rgba(164, 95, 56, 0.62);
+            border-radius: 999px;
+            transform: rotate(45deg);
+            transform-origin: left center;
+        }
+
+        [data-theme="dark"] .search-icon {
+            border-color: rgba(240, 174, 115, 0.78);
+        }
+
+        [data-theme="dark"] .search-icon::after {
+            background: rgba(240, 174, 115, 0.78);
         }
 
         .filter-tags {
@@ -284,31 +329,51 @@
 
         .filter-label {
             font-size: 0.85rem;
-            color: var(--text-secondary);
-            font-weight: 500;
+            color: var(--text-primary);
+            font-weight: 600;
             margin-right: 5px;
         }
 
         .filter-tag {
-            background-color: rgba(244, 227, 204, 0.66);
-            color: var(--text-secondary);
-            border: 1px solid transparent;
+            background-color: rgba(255, 246, 232, 0.72);
+            color: #7a5133;
+            border: 1px solid rgba(164, 95, 56, 0.18);
             padding: 6px 14px;
             border-radius: 999px;
             font-size: 0.85rem;
+            font-weight: 500;
             cursor: pointer;
             transition: var(--transition);
+        }
+
+        [data-theme="dark"] .filter-tag {
+            background-color: rgba(85, 51, 30, 0.82);
+            color: #f7d9bb;
+            border-color: rgba(240, 174, 115, 0.22);
         }
 
         .filter-tag:hover {
             border-color: var(--accent);
             color: var(--accent);
+            background-color: rgba(255, 236, 207, 0.88);
+        }
+
+        [data-theme="dark"] .filter-tag:hover {
+            background-color: rgba(119, 70, 38, 0.92);
+            color: #ffe4c7;
         }
 
         .filter-tag.active {
-            background-color: var(--accent);
-            color: #ffffff;
+            background: linear-gradient(135deg, #b8683a, #f0ae73);
+            color: #fff8ee;
             border-color: var(--accent);
+            box-shadow: 0 8px 18px rgba(164, 95, 56, 0.28);
+        }
+
+        [data-theme="dark"] .filter-tag.active {
+            background: linear-gradient(135deg, #f0ae73, #bd6d3d);
+            color: #1b0f09;
+            border-color: rgba(255, 214, 176, 0.72);
         }
 
         /* 故事網格 */
@@ -881,7 +946,7 @@
         <!-- 搜尋與篩選器區塊 -->
         <section class="search-filter-container">
             <div class="search-wrapper">
-                <span class="search-icon">🔍</span>
+                <span class="search-icon" aria-hidden="true"></span>
                 <input type="text" class="search-input" id="searchInput" placeholder="搜尋主題名稱、故事標題或內文..." oninput="handleSearchFilter()">
             </div>
             <div class="filter-tags">
@@ -979,7 +1044,7 @@
         // 請在此處填入您的 Google 試算表 ID。
         // 例如：https://docs.google.com/spreadsheets/d/12345abcdefg/edit 中的 '12345abcdefg'
         // 注意：試算表必須設定為「知道連結的人均可檢視」，並且在選單點選「檔案 ➔ 共用 ➔ 發布到網路」！
-        const GOOGLE_SHEET_ID = '';
+        const GOOGLE_SHEET_ID = '14ZrPIdEuLUPAz3sjWpJCUxn1AiD0svrGj_9ntERvtfU';
 
         // 預設的初始本地故事資料庫 (若試算表未設定或載入失敗時的備用/降級方案)
         const defaultStories = {
@@ -1107,12 +1172,16 @@
                 // 未設定 Sheet ID ➔ 降級使用內建本地故事資料
                 console.log("未設定 GOOGLE_SHEET_ID，使用內建備用資料。");
                 storyDatabase = { ...defaultStories };
-                badge.innerHTML = `<span>🟤 網頁內置預設故事</span>`;
+                badge.innerHTML = `<span>🟤 使用內建故事資料</span>`;
                 renderGallery();
                 return;
             }
 
             try {
+                storyDatabase = { ...defaultStories };
+                renderGallery();
+                badge.innerHTML = `<span>🟡 正在同步 Google 試算表...</span>`;
+
                 // 串接 Google Visualization API 格式化端點讀取試算表
                 const url = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json`;
                 const response = await fetch(url);
@@ -1152,13 +1221,13 @@
                     throw new Error("試算表解析出 0 筆資料");
                 }
 
-                storyDatabase = tempDb;
-                badge.innerHTML = `<span style="color: #47782e;">🟢 雲端 Google 試算表同步中</span>`;
-                console.log("成功從 Google Sheets 載入故事資料！共載入 " + Object.keys(storyDatabase).length + " 筆。");
+                storyDatabase = { ...defaultStories, ...tempDb };
+                badge.innerHTML = `<span style="color: #47782e;">🟢 已同步 Google 試算表 (${Object.keys(tempDb).length} 則雲端 / ${Object.keys(storyDatabase).length} 則總數)</span>`;
+                console.log("成功從 Google Sheets 載入故事資料！雲端 " + Object.keys(tempDb).length + " 筆，總共顯示 " + Object.keys(storyDatabase).length + " 筆。");
             } catch (err) {
                 console.error("無法從 Google Sheets 載入資料，已降級啟用本地預設故事：", err);
                 storyDatabase = { ...defaultStories };
-                badge.innerHTML = `<span style="color: #d9534f;">🔴 雲端連線失敗，已啟動備用資料</span>`;
+                badge.innerHTML = `<span style="color: #d9534f;">🔴 Google 試算表同步失敗，使用內建故事</span>`;
             }
 
             renderGallery();
