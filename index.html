@@ -253,14 +253,29 @@
             margin-bottom: 60px;
         }
 
-        /* 無資料提示 */
-        .no-results {
+        /* 無資料與載入中狀態 */
+        .no-results, .loading-state {
             grid-column: 1 / -1;
             text-align: center;
-            padding: 40px;
+            padding: 50px 20px;
             color: var(--text-secondary);
-            font-size: 1rem;
+            font-size: 1.05rem;
             font-weight: 300;
+        }
+
+        .loading-spinner {
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--accent);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         /* 故事卡片 */
@@ -408,7 +423,7 @@
             font-weight: 500;
         }
 
-        .input-group input, .input-group textarea, .input-group select {
+        .input-group input, .input-group textarea {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
             color: var(--text-primary);
@@ -420,7 +435,7 @@
             transition: var(--transition);
         }
 
-        .input-group input:focus, .input-group textarea:focus, .input-group select:focus {
+        .input-group input:focus, .input-group textarea:focus {
             border-color: var(--accent);
             box-shadow: 0 0 0 3px rgba(142, 104, 77, 0.15);
         }
@@ -653,214 +668,32 @@
             color: #ffffff;
         }
 
-        .btn-danger {
-            color: #d9534f;
-            border-color: #d9534f;
-        }
-
-        .btn-danger:hover {
-            background-color: #d9534f;
-            color: #ffffff;
-            border-color: #d9534f;
-        }
-
-        /* ==================== 管理後台樣式 (Admin Panel) ==================== */
-        .btn-admin-link {
-            background: none;
-            border: none;
+        /* 數據來源指示器樣式 */
+        .data-source-wrapper {
+            margin-top: 15px;
+            font-size: 0.8rem;
             color: var(--text-secondary);
-            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .data-source-badge {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 4px 12px;
+            border-radius: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+        }
+
+        .setup-guide-link {
+            color: var(--accent);
             text-decoration: underline;
             cursor: pointer;
-            margin-top: 10px;
-            display: inline-block;
-            transition: var(--transition);
-        }
-
-        .btn-admin-link:hover {
-            color: var(--accent);
-        }
-
-        /* 管理後台 Dialog */
-        dialog.admin-dialog {
-            border: none;
-            border-radius: 20px;
-            background-color: var(--bg-primary);
-            color: var(--text-primary);
-            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.3);
-            width: 95%;
-            max-width: 800px;
-            margin: auto;
-            outline: none;
-            overflow: hidden;
-            animation: modalFadeIn 0.3s ease;
-        }
-
-        dialog.admin-dialog::backdrop {
-            background-color: rgba(26, 18, 13, 0.85);
-            backdrop-filter: blur(12px);
-        }
-
-        .admin-container {
-            display: flex;
-            flex-direction: column;
-            max-height: 90vh;
-        }
-
-        .admin-header {
-            padding: 20px 25px;
-            background-color: var(--bg-secondary);
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .admin-title {
-            font-family: var(--font-serif);
-            font-size: 1.4rem;
-            color: var(--text-primary);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .admin-body {
-            padding: 25px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-        }
-
-        /* 管理故事清單 */
-        .admin-stories-list {
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            background-color: var(--card-bg);
-            overflow: hidden;
-        }
-
-        .admin-list-header {
-            background-color: var(--bg-secondary);
-            padding: 12px 18px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .admin-story-item {
-            padding: 15px 18px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 15px;
-            transition: var(--transition);
-        }
-
-        .admin-story-item:last-child {
-            border-bottom: none;
-        }
-
-        .admin-story-item:hover {
-            background-color: var(--bg-secondary);
-        }
-
-        .admin-story-meta {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .admin-story-thumb {
-            width: 50px;
-            height: 50px;
-            object-fit: cover;
-            border-radius: 6px;
-            border: 1px solid var(--border-color);
-        }
-
-        .admin-story-info h4 {
-            font-size: 0.95rem;
-            margin-bottom: 4px;
-        }
-
-        .admin-story-info p {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-        }
-
-        .admin-story-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn-small {
-            padding: 6px 12px;
-            font-size: 0.8rem;
-            border-radius: 6px;
-        }
-
-        /* 編輯表單 */
-        .admin-form-panel {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-            display: none; /* 預設隱藏，點擊編輯/新增時顯示 */
-            animation: fadeIn 0.3s ease;
-        }
-
-        .admin-form-panel.active {
-            display: block;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        @media (min-width: 600px) {
-            .form-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-            .form-full {
-                grid-column: span 2;
-            }
-        }
-
-        /* 複製匯出區 */
-        .export-section {
-            background-color: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 20px;
-        }
-
-        .export-section h3 {
-            font-size: 1rem;
-            margin-bottom: 10px;
-        }
-
-        .export-textarea {
-            width: 100%;
-            height: 120px;
-            font-family: monospace;
-            font-size: 0.8rem;
-            background-color: var(--bg-primary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary);
-            padding: 10px;
-            border-radius: 6px;
-            resize: none;
-            margin-bottom: 12px;
-            outline: none;
         }
 
         /* 頁尾 */
@@ -872,6 +705,9 @@
             border-top: 1px solid var(--border-color);
             background-color: var(--bg-secondary);
             margin-top: 60px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         footer p {
@@ -906,19 +742,11 @@
             .guestbook-section {
                 padding: 20px;
             }
-            dialog.story-dialog, dialog.admin-dialog {
+            dialog.story-dialog {
                 width: 95%;
             }
-            .dialog-footer, .admin-story-item {
+            .dialog-footer {
                 flex-direction: column;
-                align-items: stretch;
-            }
-            .admin-story-meta {
-                width: 100%;
-            }
-            .admin-story-actions {
-                justify-content: flex-end;
-                margin-top: 10px;
             }
             .dialog-footer .btn-action {
                 width: 100%;
@@ -941,7 +769,7 @@
     </header>
 
     <main>
-        <!-- 搜尋與篩選器區塊 (新增) -->
+        <!-- 搜尋與篩選器區塊 -->
         <section class="search-filter-container">
             <div class="search-wrapper">
                 <span class="search-icon">🔍</span>
@@ -959,7 +787,13 @@
 
         <!-- 時光廊卡片區 -->
         <h2 class="gallery-title">故事時光廊</h2>
-        <div class="gallery-grid" id="galleryGrid"></div>
+        <div class="gallery-grid" id="galleryGrid">
+            <!-- 載入中動畫 -->
+            <div class="loading-state" id="loadingState">
+                <div class="loading-spinner"></div>
+                <p>正在從雲端載入故事時光...</p>
+            </div>
+        </div>
 
         <!-- 讀者故事留言板 (說故事/互動功能) -->
         <section class="guestbook-section">
@@ -1012,98 +846,27 @@
         </div>
     </dialog>
 
-    <!-- 原生管理後台彈窗 dialog (新增維護與 CRUD) -->
-    <dialog id="adminDialog" class="admin-dialog" closedby="closerequest" aria-labelledby="adminDialogTitle">
-        <div class="admin-container">
-            <div class="admin-header">
-                <h2 class="admin-title" id="adminDialogTitle">⚙️ 故事維護與管理後台</h2>
-                <button class="dialog-close-btn" onclick="closeAdminDialog()" aria-label="關閉管理頁">×</button>
-            </div>
-            <div class="admin-body">
-                
-                <!-- 1. 現有故事清單 -->
-                <div class="admin-stories-list">
-                    <div class="admin-list-header">
-                        <span>目前上架的故事列表</span>
-                        <button class="btn-action btn-action-primary btn-small" onclick="showAddForm()">➕ 新增故事</button>
-                    </div>
-                    <div id="adminStoriesContainer">
-                        <!-- 故事列表會在此動態渲染 -->
-                    </div>
-                </div>
-
-                <!-- 2. 新增與編輯表單 -->
-                <div class="admin-form-panel" id="adminFormPanel">
-                    <h3 id="formPanelTitle" style="margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">編輯故事</h3>
-                    <form id="storyEditForm" onsubmit="handleStoryFormSubmit(event)">
-                        <input type="hidden" id="formStoryId">
-                        <div class="form-grid">
-                            <div class="input-group">
-                                <label for="formStoryCode">專屬網址 ID / 編號 (例如：1 或 2，請用純數字)</label>
-                                <input type="text" id="formStoryCode" required placeholder="例如：4">
-                            </div>
-                            <div class="input-group">
-                                <label for="formStoryTag">分類標籤 / 咖啡品項</label>
-                                <input type="text" id="formStoryTag" required placeholder="例如：Vol.04 肯亞">
-                            </div>
-                            <div class="input-group form-full">
-                                <label for="formStoryTitle">故事標題</label>
-                                <input type="text" id="formStoryTitle" required placeholder="輸入故事的文青標題">
-                            </div>
-                            <div class="input-group form-full">
-                                <label for="formStoryCover">封面圖片網址 (Unsplash 或 Cloudinary)</label>
-                                <input type="url" id="formStoryCover" required placeholder="https://images.unsplash.com/...">
-                            </div>
-                            <div class="input-group">
-                                <label for="formStoryType">多模態影音類型</label>
-                                <select id="formStoryType" onchange="toggleFormMediaPlaceholder()">
-                                    <option value="audio">純音訊 (Audio) + 封面圖</option>
-                                    <option value="video">Vlog 影片 (Video)</option>
-                                </select>
-                            </div>
-                            <div class="input-group">
-                                <label for="formStoryMedia">影音檔案直連網址 (MP3 或 MP4)</label>
-                                <input type="url" id="formStoryMedia" required placeholder="https://...">
-                            </div>
-                            <div class="input-group form-full">
-                                <label for="formStoryExcerpt">故事簡介 (卡片展示，不超過3行)</label>
-                                <textarea id="formStoryExcerpt" rows="2" required placeholder="寫一句能引人點進去讀的咖啡引言..."></textarea>
-                            </div>
-                            <div class="input-group form-full">
-                                <label for="formStoryText">故事全文內容 (斷行會自動轉換)</label>
-                                <textarea id="formStoryText" rows="6" required placeholder="寫下這杯咖啡伴隨的記憶與溫暖文字..."></textarea>
-                            </div>
-                        </div>
-                        <div style="display: flex; justify-content: flex-end; gap: 10px;">
-                            <button type="button" class="btn-action btn-small" onclick="hideFormPanel()">取消</button>
-                            <button type="submit" class="btn-action btn-action-primary btn-small">保存變更</button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- 3. 代碼匯出與永久發布指南 -->
-                <div class="export-section">
-                    <h3>💾 永久保存發布與同步 (Export Data)</h3>
-                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 10px;">
-                        因為這是無後端靜態網頁，您的新增與修改會<strong>即時保存在您這台電腦的瀏覽器中</strong>。如果您想讓其他消費者在掃描 QR Code 時也能看到更新，請點擊下方按鈕複製最新的資料，並將其貼回您專案的 <code>index.html</code> 程式碼中：
-                    </p>
-                    <textarea class="export-textarea" id="exportTextarea" readonly onclick="this.select()"></textarea>
-                    <button class="btn-action btn-action-primary" onclick="copyUpdatedDataCode()">
-                        📋 一鍵複製最新的故事資料結構
-                    </button>
-                </div>
-            </div>
-        </div>
-    </dialog>
-
     <footer>
         <p>© 2026 喝咖聽故事 MVP ｜ 享受重力之外的純粹時光</p>
         <p style="font-size: 0.75rem; opacity: 0.6;">Powered by Antigravity Engine</p>
-        <button class="btn-admin-link" onclick="openAdminDialog()">⚙️ 故事維護與管理後台</button>
+        
+        <!-- 資料來源提示 -->
+        <div class="data-source-wrapper">
+            <div class="data-source-badge" id="dataSourceBadge">
+                <span>🟤 載入中...</span>
+            </div>
+            <span class="setup-guide-link" onclick="showSetupGuide()">如何將我的 Google 試算表同步到這裡？</span>
+        </div>
     </footer>
 
     <script>
-        // 1. 預設的初始故事資料庫
+        // ==================== 1. Google 試算表設定 (關鍵！) ====================
+        // 請在此處填入您的 Google 試算表 ID。
+        // 例如：https://docs.google.com/spreadsheets/d/12345abcdefg/edit 中的 '12345abcdefg'
+        // 注意：試算表必須設定為「知道連結的人均可檢視」，並且在選單點選「檔案 ➔ 共用 ➔ 發布到網路」！
+        const GOOGLE_SHEET_ID = ''; 
+
+        // 預設的初始本地故事資料庫 (若試算表未設定或載入失敗時的備用/降級方案)
         const defaultStories = {
             "1": {
                 id: "1",
@@ -1137,38 +900,86 @@
             }
         };
 
-        // 2. 初始化加載資料庫
         let storyDatabase = {};
         let activeStoryId = null;
         let currentFilterCategory = 'all';
 
+        // 2. 初始化流程
         document.addEventListener('DOMContentLoaded', () => {
-            initDatabase();
-            renderGallery();
             loadComments();
             initTheme();
-            handleUrlRouting();
-            updateExportTextarea();
+            // 從 Google 試算表或本地載入資料
+            loadStoriesData().then(() => {
+                handleUrlRouting();
+            });
         });
 
-        // 初始化資料庫 (優先使用 localStorage)
-        function initDatabase() {
-            const localDb = localStorage.getItem('story_database');
-            if (localDb) {
-                try {
-                    storyDatabase = JSON.parse(localDb);
-                } catch(e) {
-                    console.error("解析 LocalStorage 故事庫失敗，重設為預設故事庫", e);
-                    storyDatabase = { ...defaultStories };
-                    localStorage.setItem('story_database', JSON.stringify(storyDatabase));
-                }
-            } else {
+        // 核心資料加載器：串接 Google 試算表
+        async function loadStoriesData() {
+            const badge = document.getElementById('dataSourceBadge');
+            
+            if (!GOOGLE_SHEET_ID || GOOGLE_SHEET_ID === 'YOUR_GOOGLE_SHEET_ID_HERE') {
+                // 未設定 Sheet ID ➔ 降級使用內建本地故事資料
+                console.log("未設定 GOOGLE_SHEET_ID，使用內建備用資料。");
                 storyDatabase = { ...defaultStories };
-                localStorage.setItem('story_database', JSON.stringify(storyDatabase));
+                badge.innerHTML = `<span>🟤 網頁內置預設故事</span>`;
+                renderGallery();
+                return;
             }
+
+            try {
+                // 串接 Google Visualization API 格式化端點讀取試算表
+                const url = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error("網路請求失敗");
+                
+                const text = await response.text();
+                // 移除 Google 返回的外部 JavaScript 套件函數包裝
+                const jsonStart = text.indexOf('{');
+                const jsonEnd = text.lastIndexOf('}');
+                const jsonString = text.substring(jsonStart, jsonEnd + 1);
+                const data = JSON.parse(jsonString);
+
+                const rows = data.table.rows;
+                const tempDb = {};
+
+                rows.forEach(row => {
+                    const cells = row.c;
+                    if (!cells || cells.length < 8) return; // 欄位至少要有 8 欄
+                    
+                    // 解析每列儲存格
+                    const id = cells[0] ? String(cells[0].v || '').trim() : '';
+                    if (!id) return; // ID 為必填
+
+                    tempDb[id] = {
+                        id: id,
+                        tag: cells[1] ? String(cells[1].v || '') : '',
+                        title: cells[2] ? String(cells[2].v || '') : '',
+                        cover: cells[3] ? String(cells[3].v || '') : '',
+                        excerpt: cells[4] ? String(cells[4].v || '') : '',
+                        type: cells[5] ? String(cells[5].v || 'audio').toLowerCase().trim() : 'audio',
+                        mediaUrl: cells[6] ? String(cells[6].v || '') : '',
+                        text: cells[7] ? String(cells[7].v || '') : ''
+                    };
+                });
+
+                if (Object.keys(tempDb).length === 0) {
+                    throw new Error("試算表解析出 0 筆資料");
+                }
+
+                storyDatabase = tempDb;
+                badge.innerHTML = `<span style="color: #47782e;">🟢 雲端 Google 試算表同步中</span>`;
+                console.log("成功從 Google Sheets 載入故事資料！共載入 " + Object.keys(storyDatabase).length + " 筆。");
+            } catch (err) {
+                console.error("無法從 Google Sheets 載入資料，已降級啟用本地預設故事：", err);
+                storyDatabase = { ...defaultStories };
+                badge.innerHTML = `<span style="color: #d9534f;">🔴 雲端連線失敗，已啟動備用資料</span>`;
+            }
+
+            renderGallery();
         }
 
-        // ==================== 搜尋與篩選邏輯 (新增) ====================
+        // ==================== 搜尋與篩選邏輯 ====================
         function setFilterCategory(category) {
             currentFilterCategory = category;
             
@@ -1193,7 +1004,6 @@
                 if (currentFilterCategory === 'all') {
                     categoryMatch = true;
                 } else if (currentFilterCategory === '其他') {
-                    // 不包含曼特寧、耶加雪菲、藝伎的其他咖啡
                     categoryMatch = !story.tag.includes('曼特寧') && !story.tag.includes('耶加雪菲') && !story.tag.includes('藝伎');
                 } else {
                     categoryMatch = story.tag.includes(currentFilterCategory);
@@ -1353,188 +1163,25 @@
             });
         }
 
-        // ==================== 故事後台管理維護邏輯 (新增 CRUD) ====================
-        const adminDialog = document.getElementById('adminDialog');
-
-        function openAdminDialog() {
-            renderAdminStoriesList();
-            hideFormPanel();
-            updateExportTextarea();
-            adminDialog.showModal();
-        }
-
-        function closeAdminDialog() {
-            adminDialog.close();
-        }
-
-        // 渲染管理後台內的故事列表
-        function renderAdminStoriesList() {
-            const container = document.getElementById('adminStoriesContainer');
-            container.innerHTML = '';
-
-            const stories = Object.values(storyDatabase);
-            if (stories.length === 0) {
-                container.innerHTML = `<p style="padding: 20px; text-align: center; color: var(--text-secondary);">目前尚無故事。點選右上角新增故事！</p>`;
-                return;
-            }
-
-            stories.forEach(story => {
-                const item = document.createElement('div');
-                item.className = 'admin-story-item';
-                item.innerHTML = `
-                    <div class="admin-story-meta">
-                        <img class="admin-story-thumb" src="${story.cover}" alt="縮圖">
-                        <div class="admin-story-info">
-                            <h4>${story.title}</h4>
-                            <p>${story.tag} ｜ 媒體類型: ${story.type === 'video' ? '📹 影片' : '🎵 音訊'}</p>
-                        </div>
-                    </div>
-                    <div class="admin-story-actions">
-                        <button class="btn-action btn-small" onclick="showEditForm('${story.id}')">✏️ 編輯</button>
-                        <button class="btn-action btn-danger btn-small" onclick="deleteStory('${story.id}')">🗑️ 刪除</button>
-                    </div>
-                `;
-                container.appendChild(item);
-            });
-        }
-
-        // 顯示編輯/新增表單
-        function showAddForm() {
-            document.getElementById('formPanelTitle').textContent = "➕ 新增故事";
-            document.getElementById('storyEditForm').reset();
-            document.getElementById('formStoryId').value = '';
-            document.getElementById('formStoryCode').disabled = false;
-            
-            // 自動計算下一個推薦 ID
-            const ids = Object.keys(storyDatabase).map(id => parseInt(id)).filter(id => !isNaN(id));
-            const nextId = ids.length > 0 ? Math.max(...ids) + 1 : 1;
-            document.getElementById('formStoryCode').value = nextId;
-
-            document.getElementById('adminFormPanel').classList.add('active');
-            document.getElementById('adminFormPanel').scrollIntoView({ behavior: 'smooth' });
-            toggleFormMediaPlaceholder();
-        }
-
-        function showEditForm(id) {
-            const story = storyDatabase[id];
-            if (!story) return;
-
-            document.getElementById('formPanelTitle').textContent = `✏️ 編輯故事 (ID: ${story.id})`;
-            document.getElementById('formStoryId').value = story.id;
-            document.getElementById('formStoryCode').value = story.id;
-            document.getElementById('formStoryCode').disabled = true; // 故事 ID 唯讀，不可修改
-
-            document.getElementById('formStoryTag').value = story.tag;
-            document.getElementById('formStoryTitle').value = story.title;
-            document.getElementById('formStoryCover').value = story.cover;
-            document.getElementById('formStoryType').value = story.type;
-            document.getElementById('formStoryMedia').value = story.mediaUrl;
-            document.getElementById('formStoryExcerpt').value = story.excerpt;
-            document.getElementById('formStoryText').value = story.text;
-
-            document.getElementById('adminFormPanel').classList.add('active');
-            document.getElementById('adminFormPanel').scrollIntoView({ behavior: 'smooth' });
-            toggleFormMediaPlaceholder();
-        }
-
-        function hideFormPanel() {
-            document.getElementById('adminFormPanel').classList.remove('active');
-        }
-
-        function toggleFormMediaPlaceholder() {
-            const type = document.getElementById('formStoryType').value;
-            const input = document.getElementById('formStoryMedia');
-            if (type === 'video') {
-                input.placeholder = "請輸入 MP4 影片直連網址 (例如：https://assets.mixkit.co/...mp4)";
-            } else {
-                input.placeholder = "請輸入 MP3 音訊直連網址 (例如：https://www.soundhelix.com/...mp3)";
-            }
-        }
-
-        // 新增與修改故事表單提交
-        function handleStoryFormSubmit(event) {
-            event.preventDefault();
-
-            const formId = document.getElementById('formStoryId').value;
-            const code = document.getElementById('formStoryCode').value.trim();
-            const tag = document.getElementById('formStoryTag').value.trim();
-            const title = document.getElementById('formStoryTitle').value.trim();
-            const cover = document.getElementById('formStoryCover').value.trim();
-            const type = document.getElementById('formStoryType').value;
-            const mediaUrl = document.getElementById('formStoryMedia').value.trim();
-            const excerpt = document.getElementById('formStoryExcerpt').value.trim();
-            const text = document.getElementById('formStoryText').value.trim();
-
-            if (!code || !tag || !title || !cover || !mediaUrl || !excerpt || !text) {
-                alert('請完整填寫所有必填欄位！');
-                return;
-            }
-
-            const storyId = formId || code; // 如果是編輯，用原有 ID，若是新增，用填寫的 ID
-
-            // 驗證新增時 ID 是否衝突
-            if (!formId && storyDatabase[storyId]) {
-                alert(`編號 ID: ${storyId} 已存在！請使用其他 ID 或先進行編輯。`);
-                return;
-            }
-
-            const updatedStory = {
-                id: storyId,
-                tag,
-                title,
-                cover,
-                excerpt,
-                type,
-                mediaUrl,
-                text
-            };
-
-            // 寫入/更新資料庫
-            storyDatabase[storyId] = updatedStory;
-            localStorage.setItem('story_database', JSON.stringify(storyDatabase));
-
-            // 更新 UI 與重整列表
-            renderGallery();
-            renderAdminStoriesList();
-            hideFormPanel();
-            updateExportTextarea();
-            alert('故事儲存成功！變更已即時儲存在您本地的瀏覽器。');
-        }
-
-        // 刪除故事
-        function deleteStory(id) {
-            if (!storyDatabase[id]) return;
-            if (!confirm(`確定要刪除「${storyDatabase[id].title}」嗎？這個操作無法復原。`)) return;
-
-            delete storyDatabase[id];
-            localStorage.setItem('story_database', JSON.stringify(storyDatabase));
-
-            renderGallery();
-            renderAdminStoriesList();
-            hideFormPanel();
-            updateExportTextarea();
-        }
-
-        // 更新匯出文本區內容
-        function updateExportTextarea() {
-            const textarea = document.getElementById('exportTextarea');
-            const dataString = JSON.stringify(storyDatabase, null, 4);
-            
-            // 生成可直接貼回 index.html 的程式碼
-            textarea.value = `// 請將 index.html 約第 340 行起的 storyDatabase 物件替換為以下內容：\nconst storyDatabase = ${dataString};`;
-        }
-
-        // 複製最新的故事代碼
-        function copyUpdatedDataCode() {
-            const textarea = document.getElementById('exportTextarea');
-            textarea.select();
-            
-            navigator.clipboard.writeText(textarea.value).then(() => {
-                alert('最新的故事代碼已成功複製！\n\n您可以打開本地專案的 index.html，找到 script 中定義 storyDatabase 的地方（約第 340 行），將其整段替換，然後使用 GitHub Desktop 提交並推送，即可永久將新故事發布上網給所有人看！');
-            }).catch(err => {
-                console.error('複製失敗:', err);
-                alert('請手動選取文本框中的所有代碼進行複製。');
-            });
+        // ==================== 試算表教學彈窗 ====================
+        function showSetupGuide() {
+            alert(
+                "如何使用 Google 試算表維護故事？\n\n" +
+                "1. 在 Google 雲端新增一個試算表。\n" +
+                "2. 建立以下 8 個欄位 (從 A 到 H 欄，第一列為標題)：\n" +
+                "   A: ID  (編號，例如 1)\n" +
+                "   B: 標籤  (例如 Vol.01 曼特寧)\n" +
+                "   C: 標題  (例如 雨中的東京書店)\n" +
+                "   D: 封面圖網址 (圖片連結)\n" +
+                "   E: 簡介 (卡片摘要)\n" +
+                "   F: 類型 (必須填 video 或 audio)\n" +
+                "   G: 影音網址 (直連連結)\n" +
+                "   H: 故事內文 (正文內容)\n\n" +
+                "3. 點選試算表「共用」➔ 將權限設為「知道連結的人均可檢視」。\n" +
+                "4. 點選「檔案」➔「共用」➔「發布到網路」，點擊「發布」。\n" +
+                "5. 複製試算表網址中的 ID，並填入程式碼中的 `GOOGLE_SHEET_ID` 變數中！\n\n" +
+                "完成後，網頁就會永久自動抓取您的試算表作為資料庫！"
+            );
         }
 
         // ==================== 留言板功能 (LocalStorage 本地儲存) ====================
