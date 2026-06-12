@@ -231,22 +231,34 @@
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 10px;
-            margin-top: 26px;
+            align-items: center;
+            gap: 12px;
+            margin-top: 28px;
+            font-family: "Noto Serif TC", "Songti TC", serif; /* 藝術文化感字體 */
+            font-size: 1rem;
+            color: var(--primary-color);
+            letter-spacing: 0.1em;
+            opacity: 0.9;
         }
 
         .ritual-chip {
-            background: rgba(255, 252, 246, 0.72);
-            border: 1px solid var(--border-color);
-            border-radius: 999px;
-            color: var(--text-secondary);
-            font-size: 0.84rem;
-            padding: 8px 14px;
-            backdrop-filter: blur(10px);
+            background: transparent;
+            border: none;
+            padding: 0;
+            color: inherit;
+            display: flex;
+            align-items: center;
+        }
+
+        .ritual-chip:not(:last-child)::after {
+            content: "·";
+            margin-left: 12px;
+            opacity: 0.5;
+            font-weight: bold;
         }
 
         [data-theme="dark"] .ritual-chip {
-            background: rgba(33, 21, 14, 0.72);
+            background: transparent;
         }
 
         /* 主要內容區 */
