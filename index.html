@@ -1115,6 +1115,18 @@
         // ==================== CMS v1 資料載入器 ====================
         // 對應 Google Sheet 12 欄 CMS 結構：
         // A:id  B:status  C:sort  D:category  E:tag  F:title  G:cover  H:excerpt  I:type  J:mediaUrl  K:text  L:updatedAt
+        
+        // 自動轉換 Google Drive 共用連結為直接讀取連結
+        function convertDriveLink(url) {
+            if (!url) return '';
+            const driveRegex = /https:\/\/drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)\//;
+            const match = url.match(driveRegex);
+            if (match && match[1]) {
+                return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+            }
+            return url;
+        }
+
         async function loadStoriesData() {
             const badge = document.getElementById('dataSourceBadge');
             
@@ -1164,10 +1176,10 @@
                         category: cells[3] ? String(cells[3].v || '') : '',
                         tag: cells[4] ? String(cells[4].v || '') : '',
                         title: cells[5] ? String(cells[5].v || '') : '',
-                        cover: cells[6] ? String(cells[6].v || '') : '',
+                        cover: convertDriveLink(cells[6] ? String(cells[6].v || '') : ''),
                         excerpt: cells[7] ? String(cells[7].v || '') : '',
                         type: cells[8] ? String(cells[8].v || 'text').toLowerCase().trim() : 'text',
-                        mediaUrl: cells[9] ? String(cells[9].v || '') : '',
+                        mediaUrl: convertDriveLink(cells[9] ? String(cells[9].v || '') : ''),
                         text: cells[10] ? String(cells[10].v || '') : ''
                     };
                 });
