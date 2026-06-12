@@ -1319,8 +1319,7 @@
                 mediaHtml = `
                     <div class="dialog-audio-wrapper">
                         <img class="audio-cover" src="${story.cover}" alt="${story.title}">
-                        <audio class="dialog-audio" id="dialogAudio" controls>
-                            <source src="${story.mediaUrl}" type="audio/mpeg">
+                        <audio class="dialog-audio" id="dialogAudio" src="${story.mediaUrl}" controls>
                             您的瀏覽器不支援音訊播放。
                         </audio>
                     </div>
