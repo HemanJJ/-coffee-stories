@@ -14,10 +14,8 @@ import csv
 import json
 import os
 import re
-import sys
 import time
 from dataclasses import dataclass
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterable
 from urllib.error import HTTPError, URLError
@@ -27,12 +25,14 @@ from urllib.request import urlopen
 
 YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3"
 DEFAULT_QUERY_FILE = Path(__file__).with_name("topic_queries.txt")
+VIDEO_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{11}$")
 
 POSITIVE_TERMS = {
     "訪談": 3,
     "專訪": 3,
     "人物故事": 4,
     "生命故事": 4,
+    "小人物": 3,
     "紀錄": 3,
     "紀實": 3,
     "紀錄片": 4,
@@ -43,6 +43,18 @@ POSITIVE_TERMS = {
     "重新開始": 3,
     "重啟": 2,
     "告白": 1,
+    "一個人": 2,
+    "外公": 2,
+    "父親": 2,
+    "母親": 2,
+    "家屬": 2,
+    "告別": 2,
+    "記憶": 2,
+    "失去": 2,
+    "想念": 2,
+    "回憶": 2,
+    "相遇": 1,
+    "成長": 1,
 }
 
 NEGATIVE_TERMS = {
@@ -51,16 +63,141 @@ NEGATIVE_TERMS = {
     "看哭": -4,
     "催淚": -3,
     "爆哭": -4,
+    "哭慘": -4,
+    "潸然淚下": -4,
     "必看": -2,
     "精彩片段": -3,
     "reaction": -3,
     "懶人包": -2,
     "八卦": -4,
+    "直播": -3,
+    "live": -3,
+    "新聞": -4,
+    "新聞台": -5,
+    "大現場": -5,
+    "政論": -5,
+    "政治人物": -6,
+    "選舉": -5,
+    "政治": -5,
+    "毛澤東": -8,
+    "毛泽东": -8,
+    "佛教": -7,
+    "法師": -7,
+    "法师": -7,
+    "和尚": -7,
+    "僧人": -7,
+    "佛陀": -7,
+    "禪修": -6,
+    "禅修": -6,
+    "寺廟": -6,
+    "寺庙": -6,
+    "講經": -6,
+    "讲经": -6,
+    "成果": -3,
+    "成果紀錄": -4,
+    "精華版": -3,
+    "完整版": -1,
+    "品牌重塑": -5,
+    "品牌": -3,
+    "集團": -3,
+    "同仁": -2,
+    "企業": -3,
+    "論壇": -2,
+    "宣傳": -4,
+    "mv": -5,
+    "主題曲": -5,
+    "純享版": -5,
+    "纯享版": -5,
+    "片段": -4,
+    "合唱": -3,
+    "配樂": -4,
+    "配乐": -4,
+    "風華合伙人": -5,
+    "风华合伙人": -5,
+    "主持人": -4,
+    "節目": -4,
+    "节目": -4,
+    "藝人": -6,
+    "艺人": -6,
+    "明星": -6,
+    "女星": -6,
+    "男星": -6,
+    "演員": -5,
+    "演员": -5,
+    "歌手": -5,
+    "偶像": -5,
+    "娛樂人物": -6,
+    "娱乐人物": -6,
+    "服貿": -6,
+    "柯文哲": -6,
+    "賴清德": -6,
+    "民進黨": -6,
+    "國民黨": -6,
+}
+
+SEARCH_EXCLUDE_TERMS = [
+    "shorts",
+    "short",
+    "直播",
+    "live",
+    "新聞",
+    "新聞台",
+    "政論",
+    "政治人物",
+    "選舉",
+    "服貿",
+    "柯文哲",
+    "賴清德",
+    "民進黨",
+    "國民黨",
+    "毛澤東",
+    "毛泽东",
+    "佛教",
+    "法師",
+    "法师",
+    "和尚",
+    "僧人",
+    "佛陀",
+    "禪修",
+    "禅修",
+    "寺廟",
+    "寺庙",
+    "MV",
+    "主題曲",
+    "纯享版",
+    "純享版",
+    "主持人",
+    "節目",
+    "节目",
+    "藝人",
+    "艺人",
+    "明星",
+    "女星",
+    "男星",
+    "演員",
+    "演员",
+    "歌手",
+    "偶像",
+]
+
+NEGATIVE_CHANNEL_TERMS = {
+    "新聞": -5,
+    "新聞台": -6,
+    "直播": -4,
+    "娛樂": -3,
+    "娛樂台": -5,
+    "综艺": -5,
+    "綜藝": -5,
+    "佛教": -7,
+    "法師": -7,
+    "法师": -7,
+    "寺": -4,
 }
 
 
 @dataclass
 class TopicRow:
+    rank: int
     query: str
     video_id: str
     title: str
@@ -69,10 +206,16 @@ class TopicRow:
     duration_seconds: int
     duration_label: str
     view_count: int
+    comment_count: int
     url: str
     score: int
     score_reasons: str
+    source_type: str
+    auto_suggestion: str
+    manual_status: str
+    manual_note: str
     notes: str
+    top_comment_excerpt: str
     description: str
 
 
@@ -132,6 +275,18 @@ def parse_args() -> argparse.Namespace:
         help="CSV output path.",
     )
     parser.add_argument(
+        "--shortlist-output",
+        type=Path,
+        default=Path("youtube_topic_shortlist.csv"),
+        help="Shortlist CSV output path.",
+    )
+    parser.add_argument(
+        "--shortlist-min-score",
+        type=int,
+        default=18,
+        help="Minimum score for shortlist CSV.",
+    )
+    parser.add_argument(
         "--sleep",
         type=float,
         default=0.15,
@@ -182,18 +337,22 @@ def search_videos(
     language: str,
     order: str,
 ) -> list[dict]:
+    query_with_exclusions = " ".join(
+        [query] + [f"-{term}" for term in SEARCH_EXCLUDE_TERMS]
+    )
     payload = fetch_json(
         "search",
         {
             "key": api_key,
             "part": "snippet",
-            "q": query,
+            "q": query_with_exclusions,
             "type": "video",
             "maxResults": max_results,
             "regionCode": region_code,
             "relevanceLanguage": language,
             "safeSearch": "strict",
             "videoEmbeddable": "true",
+            "videoDuration": "medium",
             "order": order,
         },
     )
@@ -201,19 +360,72 @@ def search_videos(
 
 
 def fetch_video_details(api_key: str, video_ids: Iterable[str]) -> dict[str, dict]:
-    video_ids = [video_id for video_id in video_ids if video_id]
+    video_ids = [
+        video_id.strip()
+        for video_id in video_ids
+        if video_id and VIDEO_ID_PATTERN.fullmatch(video_id.strip())
+    ]
     if not video_ids:
         return {}
 
-    payload = fetch_json(
-        "videos",
-        {
-            "key": api_key,
-            "part": "snippet,contentDetails,statistics",
-            "id": ",".join(video_ids),
-        },
+    params = {
+        "key": api_key,
+        "part": "snippet,contentDetails,statistics",
+        "id": ",".join(video_ids),
+    }
+
+    try:
+        payload = fetch_json("videos", params)
+        return {item["id"]: item for item in payload.get("items", [])}
+    except RuntimeError:
+        detail_map: dict[str, dict] = {}
+        for video_id in video_ids:
+            try:
+                payload = fetch_json(
+                    "videos",
+                    {
+                        "key": api_key,
+                        "part": "snippet,contentDetails,statistics",
+                        "id": video_id,
+                    },
+                )
+            except RuntimeError:
+                continue
+
+            items = payload.get("items", [])
+            if items:
+                detail_map[video_id] = items[0]
+        return detail_map
+
+
+def fetch_top_comment_excerpt(api_key: str, video_id: str) -> str:
+    try:
+        payload = fetch_json(
+            "commentThreads",
+            {
+                "key": api_key,
+                "part": "snippet",
+                "videoId": video_id,
+                "maxResults": 1,
+                "order": "relevance",
+                "textFormat": "plainText",
+            },
+        )
+    except RuntimeError:
+        return ""
+
+    items = payload.get("items", [])
+    if not items:
+        return ""
+
+    snippet = (
+        items[0]
+        .get("snippet", {})
+        .get("topLevelComment", {})
+        .get("snippet", {})
     )
-    return {item["id"]: item for item in payload.get("items", [])}
+    text = normalize_description(snippet.get("textDisplay") or "")
+    return text[:140]
 
 
 def parse_iso8601_duration(value: str) -> int:
@@ -270,9 +482,116 @@ def summarize_notes(duration_seconds: int, title_blob: str) -> tuple[int, list[s
     return score, reasons
 
 
+def score_channel(channel: str) -> tuple[int, list[str]]:
+    score = 0
+    reasons: list[str] = []
+    lowered = channel.lower()
+
+    for term, weight in NEGATIVE_CHANNEL_TERMS.items():
+        if term.lower() in lowered:
+            score += weight
+            reasons.append(f"{weight} 頻道:{term}")
+
+    return score, reasons
+
+
+def classify_source_type(title_blob: str, channel: str) -> str:
+    lowered = " ".join([title_blob, channel]).lower()
+
+    if any(term in lowered for term in ["新聞", "新聞台", "live", "直播", "政論"]):
+        return "news-risk"
+    if any(term in lowered for term in ["藝人", "艺人", "明星", "女星", "男星", "演員", "演员", "歌手", "偶像", "主持人", "節目", "节目", "綜藝", "综艺"]):
+        return "entertainment"
+    if any(term in lowered for term in ["佛教", "法師", "法师", "和尚", "僧人", "佛陀", "禪修", "禅修", "寺廟", "寺庙"]):
+        return "religion"
+    if any(term in lowered for term in ["毛澤東", "毛泽东", "總統", "总统", "市長", "市长", "立委", "議員", "议员", "部長", "部长"]):
+        return "politics"
+    if any(term in lowered for term in ["mv", "主題曲", "纯享版", "純享版", "片段", "合唱", "配樂", "配乐"]):
+        return "music-fragment"
+    if any(term in lowered for term in ["品牌", "品牌重塑", "集團", "企業", "同仁"]):
+        return "brand"
+    if any(term in lowered for term in ["成果", "成果紀錄", "精華版", "基金會", "協會", "社區", "計畫"]):
+        return "institutional"
+    if any(
+        term in lowered
+        for term in ["回家", "陪伴", "父親", "母親", "外公", "家屬", "告別", "記憶", "人物故事", "生命故事"]
+    ):
+        return "story-fit"
+    return "general"
+
+
 def normalize_description(text: str) -> str:
     text = re.sub(r"\s+", " ", text or "").strip()
     return text[:280]
+
+
+def suggest_status(score: int, source_type: str) -> str:
+    if source_type in {"news-risk", "politics", "religion", "entertainment", "brand", "music-fragment"}:
+        return "排除"
+    if source_type == "institutional":
+        return "觀察" if score >= 18 else "排除"
+    if source_type == "story-fit":
+        if score >= 20:
+            return "保留"
+        if score >= 16:
+            return "觀察"
+        return "排除"
+    if score >= 20:
+        return "保留"
+    if score >= 16:
+        return "觀察"
+    return "排除"
+
+
+def score_fame(view_count: int, title_blob: str, channel: str) -> tuple[int, list[str]]:
+    score = 0
+    reasons: list[str] = []
+    lowered = " ".join([title_blob, channel]).lower()
+
+    if any(term in lowered for term in ["天王", "影帝", "明星", "女星", "男星", "藝人", "艺人", "總統", "总统", "市長", "市长"]):
+        score -= 4
+        reasons.append("-4 太有名")
+
+    if view_count >= 2_000_000:
+        score -= 4
+        reasons.append("-4 過熱")
+    elif view_count >= 500_000:
+        score -= 2
+        reasons.append("-2 偏熱門")
+    elif 100 <= view_count <= 50_000:
+        score += 2
+        reasons.append("+2 小人物帶")
+    elif 50_001 <= view_count <= 200_000:
+        score += 1
+        reasons.append("+1 中小眾")
+
+    return score, reasons
+
+
+def score_engagement(view_count: int, comment_count: int) -> tuple[int, list[str]]:
+    score = 0
+    reasons: list[str] = []
+
+    if comment_count >= 200:
+        score += 2
+        reasons.append("+2 留言明顯")
+    elif comment_count >= 50:
+        score += 1
+        reasons.append("+1 有留言")
+
+    if view_count > 0:
+        comments_per_thousand = (comment_count * 1000) / view_count
+        if comments_per_thousand >= 5:
+            score += 2
+            reasons.append("+2 心得互動高")
+        elif comments_per_thousand >= 1.5:
+            score += 1
+            reasons.append("+1 有互動")
+        elif view_count >= 1000 and comment_count == 0:
+            score -= 1
+            reasons.append("-1 幾乎無回應")
+
+    return score, reasons
 
 
 def build_rows(
@@ -297,23 +616,61 @@ def build_rows(
         description = normalize_description(snippet.get("description") or "")
         published_at = (snippet.get("publishedAt") or "").strip()
         view_count = int(statistics.get("viewCount", 0) or 0)
+        comment_count = int(statistics.get("commentCount", 0) or 0)
         duration_seconds = parse_iso8601_duration(content_details.get("duration", ""))
         duration_label = format_duration_label(duration_seconds)
 
         score_blob = " ".join([query, title, channel, description])
         score, reasons = summarize_notes(duration_seconds, score_blob)
+        channel_score, channel_reasons = score_channel(channel)
+        score += channel_score
+        reasons.extend(channel_reasons)
+        source_type = classify_source_type(score_blob, channel)
 
-        if view_count >= 100000:
+        if source_type == "story-fit":
             score += 2
-            reasons.append("+2 高觀看驗證")
-        elif 10000 <= view_count < 100000:
-            score += 1
-            reasons.append("+1 中等熱度")
-        elif view_count < 300:
+            reasons.append("+2 故事貼合")
+        elif source_type == "music-fragment":
+            score -= 5
+            reasons.append("-5 音樂或片段")
+        elif source_type == "institutional":
+            score -= 2
+            reasons.append("-2 機構成果片")
+        elif source_type == "brand":
+            score -= 4
+            reasons.append("-4 品牌內容")
+        elif source_type == "news-risk":
+            score -= 6
+            reasons.append("-6 新聞風險")
+        elif source_type == "entertainment":
+            score -= 7
+            reasons.append("-7 娛樂人物排除")
+        elif source_type == "religion":
+            score -= 8
+            reasons.append("-8 佛教排除")
+        elif source_type == "politics":
+            score -= 8
+            reasons.append("-8 政治排除")
+
+        fame_score, fame_reasons = score_fame(view_count, title, channel)
+        score += fame_score
+        reasons.extend(fame_reasons)
+        engagement_score, engagement_reasons = score_engagement(
+            view_count, comment_count
+        )
+        score += engagement_score
+        reasons.extend(engagement_reasons)
+
+        if view_count < 100:
             reasons.append("0 冷門待人工判讀")
+
+        if not title:
+            score -= 2
+            reasons.append("-2 缺少標題")
 
         rows.append(
             TopicRow(
+                rank=0,
                 query=query,
                 video_id=video_id,
                 title=title,
@@ -322,10 +679,16 @@ def build_rows(
                 duration_seconds=duration_seconds,
                 duration_label=duration_label,
                 view_count=view_count,
+                comment_count=comment_count,
                 url=f"https://www.youtube.com/watch?v={video_id}",
                 score=score,
                 score_reasons=" | ".join(reasons),
+                source_type=source_type,
+                auto_suggestion=suggest_status(score, source_type),
+                manual_status="",
+                manual_note="",
                 notes="待人工複查",
+                top_comment_excerpt="",
                 description=description,
             )
         )
@@ -334,7 +697,7 @@ def build_rows(
 
 
 def sort_rows(rows: list[TopicRow]) -> list[TopicRow]:
-    return sorted(
+    sorted_rows = sorted(
         rows,
         key=lambda row: (
             -row.score,
@@ -343,6 +706,9 @@ def sort_rows(rows: list[TopicRow]) -> list[TopicRow]:
             row.title.lower(),
         ),
     )
+    for index, row in enumerate(sorted_rows, start=1):
+        row.rank = index
+    return sorted_rows
 
 
 def write_csv(path: Path, rows: list[TopicRow]) -> None:
@@ -352,15 +718,22 @@ def write_csv(path: Path, rows: list[TopicRow]) -> None:
             handle,
             fieldnames=[
                 "query",
+                "rank",
                 "score",
                 "score_reasons",
+                "source_type",
+                "auto_suggestion",
+                "manual_status",
+                "manual_note",
                 "title",
                 "channel",
                 "published_at",
                 "duration_label",
                 "view_count",
+                "comment_count",
                 "url",
                 "notes",
+                "top_comment_excerpt",
                 "description",
             ],
         )
@@ -369,26 +742,40 @@ def write_csv(path: Path, rows: list[TopicRow]) -> None:
             writer.writerow(
                 {
                     "query": row.query,
+                    "rank": row.rank,
                     "score": row.score,
                     "score_reasons": row.score_reasons,
+                    "source_type": row.source_type,
+                    "auto_suggestion": row.auto_suggestion,
+                    "manual_status": row.manual_status,
+                    "manual_note": row.manual_note,
                     "title": row.title,
                     "channel": row.channel,
                     "published_at": row.published_at,
                     "duration_label": row.duration_label,
                     "view_count": row.view_count,
+                    "comment_count": row.comment_count,
                     "url": row.url,
                     "notes": row.notes,
+                    "top_comment_excerpt": row.top_comment_excerpt,
                     "description": row.description,
                 }
             )
+
+
+def write_shortlist(path: Path, rows: list[TopicRow], min_score: int) -> None:
+    shortlisted = [row for row in rows if row.score >= min_score]
+    write_csv(path, shortlisted)
 
 
 def print_summary(rows: list[TopicRow], output: Path) -> None:
     print(f"Wrote {len(rows)} rows to {output}")
     for row in rows[:8]:
         print(
-            f"- [{row.score:>2}] {row.query} :: {row.title} "
-            f"({row.duration_label or 'n/a'}, {row.view_count} views)"
+            f"{row.rank:>2}. [score={row.score:>2}] [{row.source_type}] "
+            f"{row.query} :: {row.title} "
+            f"({row.duration_label or 'n/a'}, {row.view_count} views, "
+            f"{row.comment_count} comments)"
         )
 
 
@@ -427,8 +814,18 @@ def main() -> int:
 
     filtered_rows = [row for row in all_rows if row.score >= args.min_score]
     sorted_rows = sort_rows(filtered_rows)
+    for row in sorted_rows:
+        if row.score < args.shortlist_min_score or row.comment_count <= 0:
+            continue
+        row.top_comment_excerpt = fetch_top_comment_excerpt(args.api_key, row.video_id)
+        time.sleep(max(args.sleep, 0))
     write_csv(args.output, sorted_rows)
+    write_shortlist(args.shortlist_output, sorted_rows, args.shortlist_min_score)
     print_summary(sorted_rows, args.output)
+    print(
+        f"Shortlist ({args.shortlist_min_score}+) written to "
+        f"{args.shortlist_output}"
+    )
     return 0
 
 
