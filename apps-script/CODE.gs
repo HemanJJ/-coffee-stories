@@ -112,6 +112,7 @@ function addStory(storyData) {
       storyData.type || 'text',
       storyData.mediaUrl || '',
       storyData.text || '',
+      storyData.externalLink || '',
       now
     ];
     
@@ -153,8 +154,14 @@ function updateStory(id, storyData) {
       storyData.type || 'text',
       storyData.mediaUrl || '',
       storyData.text || '',
+      storyData.externalLink || '',
       now
     ];
+    
+    // 自動擴充欄位 (如果 Google Sheet 欄數不夠)
+    if (sheet.getMaxColumns() < row.length) {
+      sheet.insertColumnsAfter(sheet.getMaxColumns(), row.length - sheet.getMaxColumns());
+    }
     
     sheet.getRange(rowIndex, 1, 1, row.length).setValues([row]);
     SpreadsheetApp.flush();
