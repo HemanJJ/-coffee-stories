@@ -1,0 +1,111 @@
+import os
+import sys
+import time
+import asyncio
+from module_1_youtube import fetch_transcript
+from module_2_story import generate_story
+from module_3_image import generate_image
+from module_4_voice import generate_voice
+import subprocess
+
+# ⚠️ 請將下方的 API_KEY 換成您新申請的「免費版」金鑰
+API_KEY = "請在這裡貼上您的新金鑰"
+GITHUB_REPO_PATH = ".." # 改為相對路徑，因為 workflow 資料夾已經搬到 GitHub 資料夾裡了
+GITHUB_PAGES_URL = "https://hemanjj.github.io/-coffee-stories"
+
+async def main():
+    print("=========================================")
+    print("☕ 咖啡時光廊 - 自動化生成工作流")
+    print("=========================================")
+    url = input("請輸入 YouTube 網址 (或直接按 Enter 跳過測試純文本): ").strip()
+
+    raw_text = ""
+    if url:
+        # 1. 抓取字幕
+        print("\n[1/5] 正在抓取 YouTube 字幕...")
+        raw_text = fetch_transcript(url)
+        if not raw_text:
+            print("無法抓取字幕，可能該影片沒有中英文字幕。")
+            return
+        print(f"✅ 成功抓取字幕，長度: {len(raw_text)} 字")
+    else:
+        raw_text = input("請輸入一段文字來寫故事: ").strip()
+        if not raw_text:
+            return
+
+    # 2. 寫作
+    print("\n[2/5] 正在請 Gemini 撰寫咖啡故事...")
+    story_data = generate_story(API_KEY, raw_text)
+    if not story_data:
+        return
+    
+    title = story_data['title']
+    excerpt = story_data['excerpt']
+    text = story_data['text']
+    print(f"✅ 標題: {title}")
+    
+    # 用時間戳記作為唯一檔名
+    timestamp = str(int(time.time()))
+    image_filename = f"story_{timestamp}.jpg"
+    audio_filename = f"story_{timestamp}.mp3"
+    
+    image_path = os.path.join(GITHUB_REPO_PATH, "assets", "images", image_filename)
+    audio_path = os.path.join(GITHUB_REPO_PATH, "assets", "audio", audio_filename)
+    
+    # 建立資料夾
+    os.makedirs(os.path.dirname(image_path), exist_ok=True)
+    os.makedirs(os.path.dirname(audio_path), exist_ok=True)
+
+    # 3. 生圖
+    print("\n[3/5] 正在生成 2K 故事封面圖...")
+    # 用 Pollinations.ai 替代 Imagen 3
+    image_bytes = generate_image(title)
+    if image_bytes:
+        with open(image_path, "wb") as f:
+            f.write(image_bytes)
+        print("✅ 封面圖生成完畢")
+    else:
+        print("⚠️ 封面圖生成失敗，稍後請手動處理")
+
+    # 4. 配音
+    print("\n[4/5] 正在請曉臻朗讀故事...")
+    # 預設使用女聲
+    await generate_voice(text, audio_path, "female")
+    print("✅ 語音生成完畢")
+
+    # 5. 上傳提示
+    print("\n[5/5] 圖片與聲音已存入本機資料夾！")
+    print("👉 請打開您熟悉的 GitHub Desktop，點擊 Commit 和 Push origin 來上傳檔案。")
+
+    # 6. 輸出 CMS 填寫資料
+    image_url = f"{GITHUB_PAGES_URL}/assets/images/{image_filename}"
+    audio_url = f"{GITHUB_PAGES_URL}/assets/audio/{audio_filename}"
+    
+    # 將資料存成 JSON，供 CMS 直接匯入
+    import json
+    story_export = {
+        "title": title,
+        "excerpt": excerpt,
+        "mediaUrl": audio_url,
+        "externalLink": youtube_url,
+        "cover": image_url,
+        "text": text,
+        "type": "audio",
+        "category": "愛", # 預設分類
+        "status": "published"
+    }
+    
+    # 每次執行都「覆蓋」舊檔案，確保裡面永遠只有「最新產生的一次」的故事
+    export_path = "ai_stories.json"
+    stories_list = [story_export]
+    
+    with open(export_path, "w", encoding="utf-8") as f:
+        json.dump(stories_list, f, ensure_ascii=False, indent=4)
+    
+    print("\n=========================================")
+    print(f"🎉 全部完成！已自動將本故事寫入【 {export_path} 】檔案中。")
+    print("👉 請前往您的 Google CMS 後台，點擊【 📥 匯入 AI 生成故事 】按鈕，選擇這個 json 檔案即可一鍵匯入！")
+    print("=========================================")
+
+if __name__ == "__main__":
+    asyncio.run(main())

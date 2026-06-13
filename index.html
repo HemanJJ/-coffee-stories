@@ -1187,7 +1187,8 @@
                         excerpt: cells[7] ? String(cells[7].v || '') : '',
                         type: cells[8] ? String(cells[8].v || 'text').toLowerCase().trim() : 'text',
                         mediaUrl: convertDriveLink(cells[9] ? String(cells[9].v || '') : '', 'audio'),
-                        text: cells[10] ? String(cells[10].v || '') : ''
+                        text: cells[10] ? String(cells[10].v || '') : '',
+                        externalLink: cells[11] ? String(cells[11].v || '') : ''
                     };
                 });
 

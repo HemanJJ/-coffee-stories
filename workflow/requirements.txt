@@ -1,0 +1,5 @@
+youtube-transcript-api
+google-genai
+edge-tts
+requests
+pillow

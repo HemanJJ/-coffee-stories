@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>☕ 咖啡時光廊 CMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════════
+       CSS Custom Properties & Reset
+       ═══════════════════════════════════════════ */
+    :root {
+      --bg-primary: #fff8ee;
+      --bg-secondary: #f4e3cc;
+      --text-primary: #2a1810;
+      --text-secondary: #735b4a;
+      --accent: #a45f38;
+      --accent-hover: #7e4425;
+      --card-bg: #fffcf6;
+      --border-color: rgba(126, 68, 37, 0.18);
+      --success: #47782e;
+      --danger: #c0392b;
+      --font-serif: 'Noto Serif TC', serif;
+      --font-sans: 'Noto Sans TC', system-ui, sans-serif;
+      --shadow-sm: 0 1px 3px rgba(42, 24, 16, 0.06);
+      --shadow-md: 0 4px 12px rgba(42, 24, 16, 0.08);
+      --shadow-lg: 0 8px 30px rgba(42, 24, 16, 0.12);
+      --shadow-xl: 0 16px 48px rgba(42, 24, 16, 0.16);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html { font-size: 16px; }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ═══════════════════════════════════════════
+       Loading Overlay
+       ═══════════════════════════════════════════ */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 248, 238, 0.82);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .loading-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .spinner-wrap {
+      text-align: center;
+    }
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid var(--bg-secondary);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .spinner-text {
+      margin-top: 14px;
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ═══════════════════════════════════════════
+       Toast Notifications
+       ═══════════════════════════════════════════ */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      pointer-events: none;
+    }
+    .toast {
+      pointer-events: all;
+      padding: 14px 22px;
+      border-radius: var(--radius-sm);
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 500;
+      box-shadow: var(--shadow-lg);
+      transform: translateX(120%);
+      animation: toastIn 0.35s ease forwards;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 380px;
+    }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+    .toast.dismissing {
+      animation: toastOut 0.3s ease forwards;
+    }
+    @keyframes toastIn {
+      to { transform: translateX(0); }
+    }
+    @keyframes toastOut {
+      to { transform: translateX(120%); opacity: 0; }
+    }
+
+    /* ═══════════════════════════════════════════
+       Header
+       ═══════════════════════════════════════════ */
+    .header {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
+      color: #fff;
+      padding: 28px 32px;
+      box-shadow: var(--shadow-md);
+      position: relative;
+      overflow: hidden;
+    }
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -40%;
+      right: -10%;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      position: relative;
+    }
+    .header-left h1 {
+      font-family: var(--font-serif);
+      font-size: 1.65rem;
+      font-weight: 700;
+      letter-spacing: 1px;
+    }
+    .header-left .subtitle {
+      font-size: 0.82rem;
+      opacity: 0.8;
+      margin-top: 4px;
+    }
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .header-link {
+      color: rgba(255,255,255,0.9);
+      text-decoration: none;
+      font-size: 0.85rem;
+      padding: 7px 16px;
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: var(--radius-sm);
+      transition: var(--transition);
+    }
+    .header-link:hover {
+      background: rgba(255,255,255,0.15);
+      border-color: rgba(255,255,255,0.5);
+    }
+    .btn-init {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 7px 18px;
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .btn-init:hover {
+      background: rgba(255,255,255,0.25);
+    }
+
+    /* ═══════════════════════════════════════════
+       Main Container
+       ═══════════════════════════════════════════ */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 24px 60px;
+    }
+
+    /* ═══════════════════════════════════════════
+       Stats Bar
+       ═══════════════════════════════════════════ */
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .stat-card {
+      flex: 1;
+      min-width: 140px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 18px 22px;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+    .stat-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    .stat-value {
+      font-family: var(--font-serif);
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    .stat-card.published .stat-value { color: var(--success); }
+    .stat-card.draft .stat-value { color: var(--danger); }
+
+    /* ═══════════════════════════════════════════
+       Toolbar
+       ═══════════════════════════════════════════ */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .btn-add {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 10px 24px;
+      border-radius: var(--radius-sm);
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      transition: var(--transition);
+      box-shadow: 0 2px 8px rgba(164, 95, 56, 0.3);
+      white-space: nowrap;
+    }
+    .btn-add:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 4px 14px rgba(126, 68, 37, 0.35);
+      transform: translateY(-1px);
+    }
+    .btn-add:active { transform: translateY(0); }
+    .search-input, .filter-select {
+      padding: 10px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      font-family: var(--font-sans);
+      background: var(--card-bg);
+      color: var(--text-primary);
+      transition: var(--transition);
+    }
+    .search-input:focus, .filter-select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(164, 95, 56, 0.12);
+    }
+    .search-input {
+      flex: 1;
+      min-width: 180px;
+    }
+    .search-input::placeholder { color: #b8a494; }
+    .filter-select { min-width: 130px; cursor: pointer; }
+
+    /* ═══════════════════════════════════════════
+       Story Table (Desktop)
+       ═══════════════════════════════════════════ */
+    .story-table-wrap {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+    }
+    .story-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .story-table thead {
+      background: var(--bg-secondary);
+    }
+    .story-table th {
+      padding: 14px 18px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-align: left;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid var(--border-color);
+      white-space: nowrap;
+    }
+    .story-table td {
+      padding: 14px 18px;
+      font-size: 0.9rem;
+      border-bottom: 1px solid rgba(126, 68, 37, 0.08);
+      vertical-align: middle;
+    }
+    .story-table tbody tr {
+      transition: var(--transition);
+    }
+    .story-table tbody tr:hover {
+      background: rgba(244, 227, 204, 0.35);
+    }
+    .story-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+    .col-sort { width: 50px; text-align: center; }
+    .col-status { width: 90px; }
+    .col-category { width: 80px; }
+    .col-title { }
+    .col-updated { width: 140px; }
+    .col-actions { width: 150px; text-align: right; }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      border: none;
+      font-family: var(--font-sans);
+    }
+    .status-badge.published {
+      background: rgba(71, 120, 46, 0.1);
+      color: var(--success);
+    }
+    .status-badge.published:hover {
+      background: rgba(71, 120, 46, 0.2);
+    }
+    .status-badge.draft {
+      background: rgba(192, 57, 43, 0.08);
+      color: var(--danger);
+    }
+    .status-badge.draft:hover {
+      background: rgba(192, 57, 43, 0.16);
+    }
+
+    .category-tag {
+      display: inline-block;
+      padding: 3px 10px;
+      background: var(--bg-secondary);
+      border-radius: 12px;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .title-cell {
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+    .title-cell .title-tag {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-weight: 400;
+      margin-top: 2px;
+    }
+
+    .btn-action {
+      padding: 6px 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      transition: var(--transition);
+      background: var(--card-bg);
+      color: var(--text-secondary);
+      margin-left: 6px;
+    }
+    .btn-action:first-child { margin-left: 0; }
+    .btn-action:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(164, 95, 56, 0.05);
+    }
+    .btn-action.delete:hover {
+      border-color: var(--danger);
+      color: var(--danger);
+      background: rgba(192, 57, 43, 0.05);
+    }
+
+    /* ═══════════════════════════════════════════
+       Story Cards (Mobile)
+       ═══════════════════════════════════════════ */
+    .story-cards {
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .story-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      box-shadow: var(--shadow-sm);
+      transition: var(--transition);
+    }
+    .story-card:active {
+      box-shadow: var(--shadow-md);
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .card-header .category-tag { margin-right: 8px; }
+    .card-title {
+      font-family: var(--font-serif);
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .card-tag {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      margin-bottom: 10px;
+    }
+    .card-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-color);
+    }
+    .card-meta .updated-time {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+    }
+    .card-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* ═══════════════════════════════════════════
+       Empty State
+       ═══════════════════════════════════════════ */
+    .empty-state {
+      text-align: center;
+      padding: 60px 24px;
+      color: var(--text-secondary);
+    }
+    .empty-state .empty-icon {
+      font-size: 3rem;
+      margin-bottom: 16px;
+      opacity: 0.6;
+    }
+    .empty-state .empty-text {
+      font-size: 1rem;
+    }
+
+    /* ═══════════════════════════════════════════
+       Dialog / Modal
+       ═══════════════════════════════════════════ */
+    dialog {
+      border: none;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl);
+      padding: 0;
+      max-width: 640px;
+      width: 92vw;
+      background: var(--card-bg);
+      color: var(--text-primary);
+      overflow: hidden;
+    }
+    dialog::backdrop {
+      background: rgba(42, 24, 16, 0.45);
+      backdrop-filter: blur(4px);
+    }
+    dialog[open] {
+      animation: dialogIn 0.3s ease;
+    }
+    @keyframes dialogIn {
+      from {
+        opacity: 0;
+        transform: translateY(24px) scale(0.96);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .dialog-header {
+      padding: 22px 28px 16px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .dialog-header h2 {
+      font-family: var(--font-serif);
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .dialog-close {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text-secondary);
+      padding: 4px;
+      line-height: 1;
+      transition: var(--transition);
+      border-radius: 6px;
+    }
+    .dialog-close:hover {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+
+    .dialog-body {
+      padding: 24px 28px;
+      max-height: 65vh;
+      overflow-y: auto;
+    }
+    .dialog-body::-webkit-scrollbar { width: 6px; }
+    .dialog-body::-webkit-scrollbar-track { background: transparent; }
+    .dialog-body::-webkit-scrollbar-thumb {
+      background: rgba(126, 68, 37, 0.2);
+      border-radius: 3px;
+    }
+
+    .dialog-footer {
+      padding: 16px 28px 22px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    /* ═══════════════════════════════════════════
+       Form Styles
+       ═══════════════════════════════════════════ */
+    .form-grid {
+      display: grid;
+      gap: 18px;
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+    .form-group label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      letter-spacing: 0.3px;
+    }
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group input[type="url"],
+    .form-group textarea,
+    .form-group select {
+      padding: 10px 14px;
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      font-family: var(--font-sans);
+      background: #fff;
+      color: var(--text-primary);
+      transition: var(--transition);
+      width: 100%;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(164, 95, 56, 0.1);
+    }
+    .form-group textarea { resize: vertical; line-height: 1.5; }
+
+    .radio-group {
+      display: flex;
+      gap: 16px;
+      padding-top: 4px;
+    }
+    .radio-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      padding: 6px 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      transition: var(--transition);
+    }
+    .radio-label:has(input:checked) {
+      border-color: var(--accent);
+      background: rgba(164, 95, 56, 0.08);
+      color: var(--accent);
+      font-weight: 500;
+    }
+    .radio-label input[type="radio"] {
+      accent-color: var(--accent);
+    }
+
+    .cover-preview {
+      margin-top: 8px;
+      width: 80px;
+      height: 80px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border-color);
+      object-fit: cover;
+      display: none;
+      background: var(--bg-secondary);
+    }
+    .cover-preview.visible {
+      display: block;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 10px 28px;
+      border-radius: var(--radius-sm);
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .btn-primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    .btn-secondary {
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      padding: 10px 24px;
+      border-radius: var(--radius-sm);
+      font-size: 0.95rem;
+      font-weight: 500;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .btn-secondary:hover {
+      background: #edd9c0;
+    }
+
+    /* ═══════════════════════════════════════════
+       Delete Dialog
+       ═══════════════════════════════════════════ */
+    .delete-dialog-body {
+      padding: 28px;
+      text-align: center;
+    }
+    .delete-icon {
+      font-size: 2.5rem;
+      margin-bottom: 12px;
+    }
+    .delete-dialog-body p {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    .delete-dialog-body .delete-title {
+      font-family: var(--font-serif);
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: var(--text-primary);
+      margin-bottom: 20px;
+    }
+    .delete-dialog-footer {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      padding: 0 28px 24px;
+    }
+    .btn-danger {
+      background: var(--danger);
+      color: #fff;
+      border: none;
+      padding: 10px 28px;
+      border-radius: var(--radius-sm);
+      font-size: 0.95rem;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .btn-danger:hover {
+      background: #a5321f;
+    }
+
+    /* ═══════════════════════════════════════════
+       Responsive
+       ═══════════════════════════════════════════ */
+    @media (max-width: 768px) {
+      .header { padding: 20px 18px; }
+      .header-left h1 { font-size: 1.3rem; }
+      .header-inner { flex-direction: column; align-items: flex-start; }
+      .container { padding: 16px 14px 48px; }
+      .stats-bar { gap: 10px; }
+      .stat-card { padding: 14px 16px; min-width: 100px; }
+      .stat-value { font-size: 1.4rem; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .btn-add { text-align: center; }
+      .story-table-wrap { display: none; }
+      .story-cards { display: flex; }
+      .form-row { grid-template-columns: 1fr; }
+      dialog { width: 96vw; }
+      .dialog-body { max-height: 55vh; padding: 18px 20px; }
+      .dialog-header, .dialog-footer { padding-left: 20px; padding-right: 20px; }
+    }
+    @media (min-width: 769px) {
+      .story-cards { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════════════ Loading Overlay ═══════════════ -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner-wrap">
+      <div class="spinner"></div>
+      <div class="spinner-text">載入中…</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════ Toast Container ═══════════════ -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ═══════════════ Header ═══════════════ -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="header-left">
+        <h1>☕ 咖啡時光廊 CMS</h1>
+        <div class="subtitle">📄 已連結 Google 試算表 ・ 內容管理後台</div>
+      </div>
+      <div class="header-right">
+        <a href="https://hemanjj.github.io/-coffee-stories/" class="header-link" target="_blank">🌐 前台預覽</a>
+        <button class="btn-init" onclick="handleInitSheet()">⚙️ 初始化試算表</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══════════════ Main Container ═══════════════ -->
+  <main class="container">
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-label">全部故事</div>
+        <div class="stat-value" id="statTotal">—</div>
+      </div>
+      <div class="stat-card published">
+        <div class="stat-label">🟢 已上架</div>
+        <div class="stat-value" id="statPublished">—</div>
+      </div>
+      <div class="stat-card draft">
+        <div class="stat-label">🔴 草稿</div>
+        <div class="stat-value" id="statDraft">—</div>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <button class="btn-add" onclick="openAddDialog()">＋ 新增故事</button>
+      <input type="file" id="importAiInput" accept=".json" style="display:none;" onchange="importAiStories(event)">
+      <button class="btn-add" style="background: #6B705C; color: #FFFFFF; border: none; margin-left: 10px;" onclick="document.getElementById('importAiInput').click()">📥 匯入 AI 生成故事</button>
+      <input type="text" class="search-input" id="searchInput" placeholder="🔍 搜尋標題、標籤…" oninput="filterStories()">
+      <select class="filter-select" id="categoryFilter" onchange="filterStories()">
+        <option value="">全部分類</option>
+      </select>
+    </div>
+
+    <!-- Story Table (Desktop) -->
+    <div class="story-table-wrap" id="storyTableWrap">
+      <table class="story-table">
+        <thead>
+          <tr>
+            <th class="col-sort">#</th>
+            <th class="col-status">狀態</th>
+            <th class="col-category">分類</th>
+            <th class="col-title">標題</th>
+            <th class="col-updated">更新時間</th>
+            <th class="col-actions">操作</th>
+          </tr>
+        </thead>
+        <tbody id="storyTableBody">
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Story Cards (Mobile) -->
+    <div class="story-cards" id="storyCards"></div>
+
+  </main>
+
+  <!-- ═══════════════ Add/Edit Dialog ═══════════════ -->
+  <dialog id="editDialog">
+    <div class="dialog-header">
+      <h2 id="editDialogTitle">新增故事</h2>
+      <button class="dialog-close" onclick="closeEditDialog()">&times;</button>
+    </div>
+    <div class="dialog-body">
+      <input type="hidden" id="editId">
+      <div class="form-grid">
+
+        <!-- Row: Status & Sort -->
+        <div class="form-row">
+          <div class="form-group">
+            <label>狀態</label>
+            <div class="radio-group">
+              <label class="radio-label">
+                <input type="radio" name="editStatus" value="published"> 🟢 上架
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="editStatus" value="draft" checked> 🔴 草稿
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="editSort">排序</label>
+            <input type="number" id="editSort" min="0" value="0">
+          </div>
+        </div>
+
+        <!-- Row: Category & Tag -->
+        <div class="form-row">
+          <div class="form-group">
+            <label for="editCategory">分類</label>
+            <select id="editCategory"></select>
+          </div>
+          <div class="form-group">
+            <label for="editTag">標籤</label>
+            <input type="text" id="editTag" placeholder="例：Vol.01 愛">
+          </div>
+        </div>
+
+        <!-- Title -->
+        <div class="form-group">
+          <label for="editTitle">標題</label>
+          <input type="text" id="editTitle" placeholder="故事標題">
+        </div>
+
+        <!-- Cover -->
+        <div class="form-group">
+          <label for="editCover">封面圖片 URL</label>
+          <input type="text" id="editCover" placeholder="https://..." oninput="previewCover(this.value)">
+          <img class="cover-preview" id="coverPreview" alt="封面預覽">
+        </div>
+
+        <!-- Excerpt -->
+        <div class="form-group">
+          <label for="editExcerpt">摘要</label>
+          <textarea id="editExcerpt" rows="3" placeholder="故事簡介…"></textarea>
+        </div>
+
+        <!-- Row: Type & MediaUrl -->
+        <div class="form-row">
+          <div class="form-group">
+            <label>類型</label>
+            <div class="radio-group">
+              <label class="radio-label">
+                <input type="radio" name="editType" value="video" checked> 🎬 影片
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="editType" value="audio"> 🎧 音訊
+              </label>
+              <label class="radio-label">
+                <input type="radio" name="editType" value="text"> 📝 文字
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="editMediaUrl">媒體 URL</label>
+            <input type="text" id="editMediaUrl" placeholder="https://...">
+          </div>
+        </div>
+
+        <!-- External Link -->
+        <div class="form-group">
+          <label for="editExternalLink">故事主人的家 (FB/網站/原始影片)</label>
+          <input type="text" id="editExternalLink" placeholder="https://...">
+        </div>
+
+        <!-- Text -->
+        <div class="form-group">
+          <label for="editText">內文</label>
+          <textarea id="editText" rows="8" placeholder="故事內文…"></textarea>
+        </div>
+
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn-secondary" onclick="closeEditDialog()">取消</button>
+      <button class="btn-primary" id="btnSave" onclick="handleSave()">儲存</button>
+    </div>
+  </dialog>
+
+  <!-- ═══════════════ Delete Confirmation Dialog ═══════════════ -->
+  <dialog id="deleteDialog">
+    <div class="delete-dialog-body">
+      <div class="delete-icon">🗑️</div>
+      <p>確定要刪除這篇故事嗎？</p>
+      <div class="delete-title" id="deleteStoryTitle"></div>
+    </div>
+    <div class="delete-dialog-footer">
+      <button class="btn-secondary" onclick="closeDeleteDialog()">取消</button>
+      <button class="btn-danger" id="btnConfirmDelete" onclick="handleDelete()">確認刪除</button>
+    </div>
+  </dialog>
+
+  <!-- ═══════════════ JavaScript ═══════════════ -->
+  <script>
+    /* ───────────────────────────────────────────
+       State
+       ─────────────────────────────────────────── */
+    let allStories = [];
+    let categoryOptions = [];
+    let deleteTargetId = null;
+
+    /* ───────────────────────────────────────────
+       Init
+       ─────────────────────────────────────────── */
+    document.addEventListener('DOMContentLoaded', function () {
+      loadCategories();
+      loadStories();
+    });
+
+    /* ───────────────────────────────────────────
+       Loading Overlay
+       ─────────────────────────────────────────── */
+    function showLoading() {
+      document.getElementById('loadingOverlay').classList.add('active');
+    }
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.remove('active');
+    }
+
+    /* ───────────────────────────────────────────
+       Toast
+       ─────────────────────────────────────────── */
+    function showToast(message, type) {
+      var container = document.getElementById('toastContainer');
+      var toast = document.createElement('div');
+      toast.className = 'toast ' + type;
+      toast.textContent = (type === 'success' ? '✓ ' : '✕ ') + message;
+      container.appendChild(toast);
+      setTimeout(function () {
+        toast.classList.add('dismissing');
+        setTimeout(function () {
+          if (toast.parentNode) toast.parentNode.removeChild(toast);
+        }, 300);
+      }, 3000);
+    }
+
+    /* ───────────────────────────────────────────
+       Load Categories
+       ─────────────────────────────────────────── */
+    function loadCategories() {
+      google.script.run
+        .withSuccessHandler(function (cats) {
+          categoryOptions = cats || [];
+          populateCategoryDropdowns();
+        })
+        .withFailureHandler(function (err) {
+          showToast('無法載入分類：' + err.message, 'error');
+        })
+        .getCategoryOptions();
+    }
+
+    function populateCategoryDropdowns() {
+      var filterSel = document.getElementById('categoryFilter');
+      var editSel = document.getElementById('editCategory');
+
+      // Filter dropdown — keep "全部分類"
+      filterSel.innerHTML = '<option value="">全部分類</option>';
+      categoryOptions.forEach(function (cat) {
+        var opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = cat;
+        filterSel.appendChild(opt);
+      });
+
+      // Edit dropdown
+      editSel.innerHTML = '';
+      categoryOptions.forEach(function (cat) {
+        var opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = cat;
+        editSel.appendChild(opt);
+      });
+    }
+
+    /* ───────────────────────────────────────────
+       Load Stories
+       ─────────────────────────────────────────── */
+    function loadStories() {
+      showLoading();
+      google.script.run
+        .withSuccessHandler(function (stories) {
+          allStories = stories || [];
+          updateStats();
+          filterStories();
+          hideLoading();
+        })
+        .withFailureHandler(function (err) {
+          hideLoading();
+          showToast('載入故事失敗：' + err.message, 'error');
+        })
+        .getStories();
+    }
+
+    /* ───────────────────────────────────────────
+       Stats
+       ─────────────────────────────────────────── */
+    function updateStats() {
+      var total = allStories.length;
+      var published = 0;
+      allStories.forEach(function (s) {
+        if (s.status === 'published') published++;
+      });
+      document.getElementById('statTotal').textContent = total;
+      document.getElementById('statPublished').textContent = published;
+      document.getElementById('statDraft').textContent = total - published;
+    }
+
+    /* ───────────────────────────────────────────
+       Filter & Render
+       ─────────────────────────────────────────── */
+    function filterStories() {
+      var keyword = document.getElementById('searchInput').value.trim().toLowerCase();
+      var catFilter = document.getElementById('categoryFilter').value;
+
+      var filtered = allStories.filter(function (s) {
+        var matchKeyword = !keyword ||
+          (s.title || '').toLowerCase().indexOf(keyword) !== -1 ||
+          (s.tag || '').toLowerCase().indexOf(keyword) !== -1 ||
+          (s.excerpt || '').toLowerCase().indexOf(keyword) !== -1;
+        var matchCat = !catFilter || s.category === catFilter;
+        return matchKeyword && matchCat;
+      });
+
+      renderTable(filtered);
+      renderCards(filtered);
+    }
+
+    function renderTable(stories) {
+      var tbody = document.getElementById('storyTableBody');
+      if (stories.length === 0) {
+        tbody.innerHTML =
+          '<tr><td colspan="6">' +
+          '<div class="empty-state">' +
+          '<div class="empty-icon">📭</div>' +
+          '<div class="empty-text">目前沒有故事，點擊「新增故事」開始！</div>' +
+          '</div>' +
+          '</td></tr>';
+        return;
+      }
+
+      var html = '';
+      stories.forEach(function (s) {
+        var isPub = s.status === 'published';
+        html +=
+          '<tr>' +
+          '<td class="col-sort" style="text-align:center;color:var(--text-secondary);font-size:0.85rem;">' + (s.sort || 0) + '</td>' +
+          '<td class="col-status">' +
+            '<button class="status-badge ' + (isPub ? 'published' : 'draft') + '" onclick="handleToggleStatus(\'' + s.id + '\')">' +
+              (isPub ? '🟢 上架' : '🔴 草稿') +
+            '</button>' +
+          '</td>' +
+          '<td class="col-category"><span class="category-tag">' + escapeHtml(s.category || '') + '</span></td>' +
+          '<td class="col-title"><div class="title-cell">' + escapeHtml(s.title || '（無標題）') +
+            (s.tag ? '<span class="title-tag">' + escapeHtml(s.tag) + '</span>' : '') +
+          '</div></td>' +
+          '<td class="col-updated" style="font-size:0.82rem;color:var(--text-secondary);">' + formatDate(s.updatedAt) + '</td>' +
+          '<td class="col-actions" style="text-align:right;white-space:nowrap;">' +
+            '<button class="btn-action" onclick="openEditDialog(\'' + s.id + '\')">✏️ 編輯</button>' +
+            '<button class="btn-action delete" onclick="openDeleteDialog(\'' + s.id + '\', \'' + escapeAttr(s.title) + '\')">🗑️ 刪除</button>' +
+          '</td>' +
+          '</tr>';
+      });
+      tbody.innerHTML = html;
+    }
+
+    function renderCards(stories) {
+      var container = document.getElementById('storyCards');
+      if (stories.length === 0) {
+        container.innerHTML =
+          '<div class="empty-state">' +
+          '<div class="empty-icon">📭</div>' +
+          '<div class="empty-text">目前沒有故事，點擊「新增故事」開始！</div>' +
+          '</div>';
+        return;
+      }
+
+      var html = '';
+      stories.forEach(function (s) {
+        var isPub = s.status === 'published';
+        html +=
+          '<div class="story-card">' +
+          '<div class="card-header">' +
+            '<span class="category-tag">' + escapeHtml(s.category || '') + '</span>' +
+            '<button class="status-badge ' + (isPub ? 'published' : 'draft') + '" onclick="handleToggleStatus(\'' + s.id + '\')">' +
+              (isPub ? '🟢 上架' : '🔴 草稿') +
+            '</button>' +
+          '</div>' +
+          '<div class="card-title">' + escapeHtml(s.title || '（無標題）') + '</div>' +
+          (s.tag ? '<div class="card-tag">' + escapeHtml(s.tag) + '</div>' : '') +
+          '<div class="card-meta">' +
+            '<span class="updated-time">' + formatDate(s.updatedAt) + '</span>' +
+            '<div class="card-actions">' +
+              '<button class="btn-action" onclick="openEditDialog(\'' + s.id + '\')">✏️ 編輯</button>' +
+              '<button class="btn-action delete" onclick="openDeleteDialog(\'' + s.id + '\', \'' + escapeAttr(s.title) + '\')">🗑️ 刪除</button>' +
+            '</div>' +
+          '</div>' +
+          '</div>';
+      });
+      container.innerHTML = html;
+    }
+
+    /* ───────────────────────────────────────────
+       Add / Edit Dialog
+       ─────────────────────────────────────────── */
+    function openAddDialog() {
+      document.getElementById('editDialogTitle').textContent = '✨ 新增故事';
+      document.getElementById('editId').value = '';
+      resetForm();
+      document.getElementById('editDialog').showModal();
+    }
+
+    function openEditDialog(id) {
+      var story = allStories.find(function (s) { return s.id === id; });
+      if (!story) return;
+
+      document.getElementById('editDialogTitle').textContent = '✏️ 編輯故事';
+      document.getElementById('editId').value = id;
+
+      // Populate fields
+      setRadio('editStatus', story.status || 'draft');
+      document.getElementById('editSort').value = story.sort || 0;
+      document.getElementById('editCategory').value = story.category || '';
+      document.getElementById('editTag').value = story.tag || '';
+      document.getElementById('editTitle').value = story.title || '';
+      document.getElementById('editCover').value = story.cover || '';
+      previewCover(story.cover || '');
+      document.getElementById('editExcerpt').value = story.excerpt || '';
+      setRadio('editType', story.type || 'video');
+      document.getElementById('editMediaUrl').value = story.mediaUrl || '';
+      document.getElementById('editExternalLink').value = story.externalLink || '';
+      document.getElementById('editText').value = story.text || '';
+
+      document.getElementById('editDialog').showModal();
+    }
+
+    function closeEditDialog() {
+      document.getElementById('editDialog').close();
+    }
+
+    function resetForm() {
+      setRadio('editStatus', 'draft');
+      document.getElementById('editSort').value = 0;
+      document.getElementById('editCategory').selectedIndex = 0;
+      document.getElementById('editTag').value = '';
+      document.getElementById('editTitle').value = '';
+      document.getElementById('editCover').value = '';
+      previewCover('');
+      document.getElementById('editExcerpt').value = '';
+      setRadio('editType', 'video');
+      document.getElementById('editMediaUrl').value = '';
+      document.getElementById('editExternalLink').value = '';
+      document.getElementById('editText').value = '';
+    }
+
+    function setRadio(name, value) {
+      var radios = document.querySelectorAll('input[name="' + name + '"]');
+      radios.forEach(function (r) { r.checked = (r.value === value); });
+    }
+    function getRadio(name) {
+      var checked = document.querySelector('input[name="' + name + '"]:checked');
+      return checked ? checked.value : '';
+    }
+
+    function previewCover(url) {
+      var img = document.getElementById('coverPreview');
+      if (url && url.trim()) {
+        img.src = url.trim();
+        img.classList.add('visible');
+        img.onerror = function () { img.classList.remove('visible'); };
+      } else {
+        img.classList.remove('visible');
+        img.src = '';
+      }
+    }
+
+    /* ───────────────────────────────────────────
+       Save (Add or Update)
+       ─────────────────────────────────────────── */
+    function handleSave() {
+      var id = document.getElementById('editId').value;
+      var storyData = {
+        status: getRadio('editStatus'),
+        sort: parseInt(document.getElementById('editSort').value, 10) || 0,
+        category: document.getElementById('editCategory').value,
+        tag: document.getElementById('editTag').value.trim(),
+        title: document.getElementById('editTitle').value.trim(),
+        cover: document.getElementById('editCover').value.trim(),
+        excerpt: document.getElementById('editExcerpt').value.trim(),
+        type: getRadio('editType'),
+        mediaUrl: document.getElementById('editMediaUrl').value.trim(),
+        externalLink: document.getElementById('editExternalLink').value.trim(),
+        text: document.getElementById('editText').value.trim()
+      };
+
+      if (!storyData.title) {
+        showToast('請輸入標題', 'error');
+        return;
+      }
+
+      var btn = document.getElementById('btnSave');
+      btn.disabled = true;
+      btn.textContent = '儲存中…';
+      showLoading();
+
+      if (id) {
+        // Update
+        google.script.run
+          .withSuccessHandler(function (result) {
+            btn.disabled = false;
+            btn.textContent = '儲存';
+            hideLoading();
+            if (result.success) {
+              showToast(result.message || '故事已更新', 'success');
+              closeEditDialog();
+              loadStories();
+            } else {
+              showToast(result.message || '更新失敗', 'error');
+            }
+          })
+          .withFailureHandler(function (err) {
+            btn.disabled = false;
+            btn.textContent = '儲存';
+            hideLoading();
+            showToast('更新失敗：' + err.message, 'error');
+          })
+          .updateStory(id, storyData);
+      } else {
+        // Add
+        google.script.run
+          .withSuccessHandler(function (result) {
+            btn.disabled = false;
+            btn.textContent = '儲存';
+            hideLoading();
+            if (result.success) {
+              showToast(result.message || '故事已新增', 'success');
+              closeEditDialog();
+              loadStories();
+            } else {
+              showToast(result.message || '新增失敗', 'error');
+            }
+          })
+          .withFailureHandler(function (err) {
+            btn.disabled = false;
+            btn.textContent = '儲存';
+            hideLoading();
+            showToast('新增失敗：' + err.message, 'error');
+          })
+          .addStory(storyData);
+      }
+    }
+
+    /* ───────────────────────────────────────────
+       Toggle Status
+       ─────────────────────────────────────────── */
+    function handleToggleStatus(id) {
+      showLoading();
+      google.script.run
+        .withSuccessHandler(function (result) {
+          hideLoading();
+          if (result.success) {
+            var label = result.newStatus === 'published' ? '已上架' : '已轉為草稿';
+            showToast(label, 'success');
+            loadStories();
+          } else {
+            showToast(result.message || '切換狀態失敗', 'error');
+          }
+        })
+        .withFailureHandler(function (err) {
+          hideLoading();
+          showToast('切換狀態失敗：' + err.message, 'error');
+        })
+        .toggleStatus(id);
+    }
+
+    /* ───────────────────────────────────────────
+       Delete Dialog
+       ─────────────────────────────────────────── */
+    function openDeleteDialog(id, title) {
+      deleteTargetId = id;
+      document.getElementById('deleteStoryTitle').textContent = '「' + title + '」';
+      document.getElementById('deleteDialog').showModal();
+    }
+
+    function closeDeleteDialog() {
+      document.getElementById('deleteDialog').close();
+      deleteTargetId = null;
+    }
+
+    function handleDelete() {
+      if (!deleteTargetId) return;
+      var id = deleteTargetId;
+      showLoading();
+      document.getElementById('btnConfirmDelete').disabled = true;
+
+      google.script.run
+        .withSuccessHandler(function (result) {
+          hideLoading();
+          document.getElementById('btnConfirmDelete').disabled = false;
+          if (result.success) {
+            showToast(result.message || '故事已刪除', 'success');
+            closeDeleteDialog();
+            loadStories();
+          } else {
+            showToast(result.message || '刪除失敗', 'error');
+          }
+        })
+        .withFailureHandler(function (err) {
+          hideLoading();
+          document.getElementById('btnConfirmDelete').disabled = false;
+          showToast('刪除失敗：' + err.message, 'error');
+        })
+        .deleteStory(id);
+    }
+
+    /* ───────────────────────────────────────────
+       Initialize Sheet
+       ─────────────────────────────────────────── */
+    function handleInitSheet() {
+      if (!confirm('確定要初始化試算表？這會建立必要的工作表結構。')) return;
+      showLoading();
+      google.script.run
+        .withSuccessHandler(function (result) {
+          hideLoading();
+          if (result.success) {
+            showToast(result.message || '試算表已初始化', 'success');
+            loadStories();
+          } else {
+            showToast(result.message || '初始化失敗', 'error');
+          }
+        })
+        .withFailureHandler(function (err) {
+          hideLoading();
+          showToast('初始化失敗：' + err.message, 'error');
+        })
+        .initializeSheet();
+    }
+
+    /* ───────────────────────────────────────────
+       Helpers & Features
+       ─────────────────────────────────────────── */
+    
+    function importAiStories(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const stories = JSON.parse(e.target.result);
+          if (!Array.isArray(stories)) {
+            showToast('JSON 格式錯誤，請確認檔案。', 'error');
+            return;
+          }
+          
+          if (!confirm(`找到 ${stories.length} 篇故事，確定要全部匯入嗎？`)) {
+            event.target.value = '';
+            return;
+          }
+          
+          showLoading(`正在匯入故事... (0/${stories.length})`);
+          
+          let count = 0;
+          let successCount = 0;
+          
+          function importNext() {
+            if (count >= stories.length) {
+              hideLoading();
+              event.target.value = '';
+              showToast(`成功匯入 ${successCount} 篇故事！`, 'success');
+              fetchStories();
+              return;
+            }
+            
+            showLoading(`正在匯入故事... (${count+1}/${stories.length})`);
+            
+            // 填補預設欄位
+            const story = stories[count];
+            if (!story.tag) story.tag = '自動匯入';
+            if (!story.sort) story.sort = 999;
+            
+            google.script.run
+              .withSuccessHandler(function (res) {
+                if (res.success) successCount++;
+                count++;
+                importNext();
+              })
+              .withFailureHandler(function (err) {
+                console.error("匯入失敗", err);
+                count++;
+                importNext(); // 忽略錯誤繼續
+              })
+              .addStory(story);
+          }
+          
+          importNext();
+          
+        } catch (err) {
+          showToast('JSON 解析失敗，請確認檔案格式正確。', 'error');
+        }
+      };
+      reader.readAsText(file);
+    }
+    function escapeHtml(str) {
+      if (!str) return '';
+      var div = document.createElement('div');
+      div.appendChild(document.createTextNode(str));
+      return div.innerHTML;
+    }
+
+    function escapeAttr(str) {
+      if (!str) return '';
+      return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '—';
+      try {
+        var d = new Date(dateStr);
+        if (isNaN(d.getTime())) return dateStr;
+        var month = (d.getMonth() + 1).toString().padStart(2, '0');
+        var day = d.getDate().toString().padStart(2, '0');
+        var hours = d.getHours().toString().padStart(2, '0');
+        var minutes = d.getMinutes().toString().padStart(2, '0');
+        return month + '/' + day + ' ' + hours + ':' + minutes;
+      } catch (e) {
+        return dateStr;
+      }
+    }
+
+    /* Close dialogs on backdrop click */
+    document.querySelectorAll('dialog').forEach(function (dialog) {
+      dialog.addEventListener('click', function (e) {
+        if (e.target === dialog) {
+          dialog.close();
+        }
+      });
+    });
+
+    /* Close dialogs on Escape */
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        var editDialog = document.getElementById('editDialog');
+        var deleteDialog = document.getElementById('deleteDialog');
+        if (editDialog.open) editDialog.close();
+        if (deleteDialog.open) deleteDialog.close();
+      }
+    });
+  </script>
+</body>
+</html>
