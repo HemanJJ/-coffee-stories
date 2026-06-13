@@ -1344,16 +1344,15 @@
                 }
             }
 
-            let externalLinkHtml = '';
-            if (story.externalLink) {
-                externalLinkHtml = `
-                    <div style="text-align: center; margin-top: 30px; margin-bottom: 20px;">
-                        <a href="${story.externalLink}" target="_blank" class="btn-action" style="background: linear-gradient(135deg, #b8683a, #f0ae73); color: white; padding: 12px 24px; text-decoration: none; display: inline-block; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(184, 104, 58, 0.4);">
-                            🌍 拜訪故事主人的家
-                        </a>
-                    </div>
-                `;
-            }
+            // 強制顯示「故事主人的家」按鈕（拔除安全機制）
+            let safeLink = story.externalLink || '#';
+            let externalLinkHtml = `
+                <div style="text-align: center; margin-top: 30px; margin-bottom: 20px;">
+                    <a href="${safeLink}" target="${safeLink === '#' ? '_self' : '_blank'}" class="btn-action" style="background: linear-gradient(135deg, #b8683a, #f0ae73); color: white; padding: 12px 24px; text-decoration: none; display: inline-block; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(184, 104, 58, 0.4);">
+                        🌍 拜訪故事主人的家
+                    </a>
+                </div>
+            `;
 
             const bodyContainer = document.getElementById('dialogBody');
             bodyContainer.innerHTML = `
