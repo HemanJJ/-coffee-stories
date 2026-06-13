@@ -261,6 +261,39 @@
             background: transparent;
         }
 
+        .hero-actions {
+            margin-top: 26px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .hero-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 18px;
+            border-radius: 999px;
+            border: 1px solid rgba(164, 95, 56, 0.2);
+            background: rgba(255, 252, 246, 0.76);
+            color: var(--text-primary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 600;
+            box-shadow: 0 16px 34px rgba(164, 95, 56, 0.12);
+            transition: var(--transition);
+        }
+
+        .hero-link:hover {
+            transform: translateY(-2px);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        [data-theme="dark"] .hero-link {
+            background: rgba(24, 14, 9, 0.78);
+            border-color: rgba(240, 174, 115, 0.2);
+        }
+
         /* 主要內容區 */
         main {
             max-width: var(--max-width);
@@ -563,6 +596,122 @@
             padding: 35px;
             border: 1px solid var(--border-color);
             margin-top: 40px;
+        }
+
+        .case-study-section {
+            margin-top: 40px;
+            padding: 36px;
+            border-radius: 30px;
+            border: 1px solid var(--border-color);
+            background:
+                linear-gradient(145deg, rgba(255, 252, 246, 0.95), rgba(243, 228, 205, 0.74));
+            box-shadow: var(--shadow);
+        }
+
+        [data-theme="dark"] .case-study-section {
+            background:
+                linear-gradient(145deg, rgba(36, 21, 13, 0.96), rgba(23, 13, 8, 0.94));
+        }
+
+        .case-study-header {
+            max-width: 760px;
+            margin-bottom: 28px;
+        }
+
+        .case-study-kicker {
+            color: var(--accent);
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .case-study-header h2 {
+            font-family: var(--font-serif);
+            font-size: clamp(1.7rem, 3vw, 2.3rem);
+            line-height: 1.35;
+            margin-bottom: 12px;
+        }
+
+        .case-study-header p {
+            color: var(--text-secondary);
+            line-height: 1.9;
+            font-size: 0.97rem;
+        }
+
+        .case-study-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .case-study-card {
+            background: rgba(255, 255, 255, 0.56);
+            border: 1px solid rgba(164, 95, 56, 0.14);
+            border-radius: 22px;
+            padding: 22px;
+        }
+
+        [data-theme="dark"] .case-study-card {
+            background: rgba(255, 248, 238, 0.03);
+            border-color: rgba(240, 174, 115, 0.14);
+        }
+
+        .case-study-card h3 {
+            font-family: var(--font-serif);
+            font-size: 1.08rem;
+            margin-bottom: 10px;
+        }
+
+        .case-study-card p {
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+            line-height: 1.75;
+        }
+
+        .case-study-flow {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+
+        .flow-step {
+            padding: 16px 18px;
+            border-radius: 18px;
+            border: 1px dashed rgba(164, 95, 56, 0.24);
+            background: rgba(255, 248, 238, 0.7);
+        }
+
+        [data-theme="dark"] .flow-step {
+            background: rgba(255, 248, 238, 0.03);
+            border-color: rgba(240, 174, 115, 0.22);
+        }
+
+        .flow-step strong {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+
+        .flow-step span {
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+            line-height: 1.65;
+        }
+
+        .case-study-note {
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .case-study-note p {
+            color: var(--text-secondary);
+            line-height: 1.8;
         }
 
         .guestbook-header {
@@ -988,6 +1137,9 @@
                 <span class="ritual-chip">重新開始</span>
                 <span class="ritual-chip">回家</span>
             </div>
+            <div class="hero-actions">
+                <a class="hero-link" href="#origin">看看這個故事怎麼開始</a>
+            </div>
         </div>
     </header>
 
@@ -1050,6 +1202,57 @@
 
             <div class="comments-list" id="commentsList">
                 <!-- 留言將在此處動態渲染 -->
+            </div>
+        </section>
+
+        <section class="case-study-section" id="origin" aria-labelledby="caseStudyTitle">
+            <div class="case-study-header">
+                <div class="case-study-kicker">起緣</div>
+                <h2 id="caseStudyTitle">不是先有企劃，才有這座時光廊；是先有想陪伴人的心，才慢慢長出它的樣子。</h2>
+                <p>這一頁不是為了把故事包裝成什麼，而是想記下它怎麼開始。從一包耳掛咖啡、一個可以被掃進去的入口，到一段能被讀、被聽、被安靜接住的內容，這個地方是一步一步被整理出來的。</p>
+            </div>
+
+            <div class="case-study-grid">
+                <article class="case-study-card">
+                    <h3>從一個入口開始</h3>
+                    <p>耳掛包上的 QR Code，不只是連到網頁，而是想讓人在撕開包裝、注水、等待香氣的幾分鐘裡，有一段剛好可以走進去的安靜時光。</p>
+                </article>
+                <article class="case-study-card">
+                    <h3>故事慢慢有了形狀</h3>
+                    <p>每則故事被整理成封面、摘要、全文與媒體形式，於是一杯咖啡不只對應一段文字，也能慢慢長成可以被讀、被聽、被記住的內容。</p>
+                </article>
+                <article class="case-study-card">
+                    <h3>讓它能繼續走下去</h3>
+                    <p>故事不是寫死在頁面裡，而是從 Google Sheet 載入。這樣做不是為了炫技，而是為了讓更新、排序、改稿都能繼續發生，不必每一次都重新來過。</p>
+                </article>
+                <article class="case-study-card">
+                    <h3>也替別人留一個位置</h3>
+                    <p>如果有一天，這樣的形式也能承接別人的故事、別的場域、別的陪伴方式，那它就不只是一個頁面，而是一種能被繼續傳遞的回應。</p>
+                </article>
+            </div>
+
+            <div class="case-study-flow" aria-label="專案流程">
+                <div class="flow-step">
+                    <strong>1. 一包咖啡</strong>
+                    <span>耳掛包、卡片、展品或贈禮上放入 QR Code。</span>
+                </div>
+                <div class="flow-step">
+                    <strong>2. 一次掃碼</strong>
+                    <span>使用者直接進入指定故事，或先進入總覽時光廊。</span>
+                </div>
+                <div class="flow-step">
+                    <strong>3. 一段停留</strong>
+                    <span>同一頁內整合圖像、音訊、影片與短篇文字。</span>
+                </div>
+                <div class="flow-step">
+                    <strong>4. 一種延續</strong>
+                    <span>用 Google Sheet 管理上架、排序、分類與更新。</span>
+                </div>
+            </div>
+
+            <div class="case-study-note">
+                <p>這裡想留下的，不是推介，也不是結論，而是起點。這件事不是因為準備好了才開始，而是因為心裡一直記得，有些人需要一段能慢下來的陪伴。</p>
+                <p>後來，方法才一點一點長出來：用什麼形式承接、怎麼讓內容能更新、怎麼讓一杯咖啡真的成為故事的入口。於是這個時光廊，才慢慢成形。</p>
             </div>
         </section>
     </main>
