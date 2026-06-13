@@ -102,6 +102,13 @@ NEGATIVE_TERMS = {
     "集團": -3,
     "同仁": -2,
     "企業": -3,
+    "課程": -4,
+    "课程": -4,
+    "畢業生訪談": -5,
+    "毕业生访谈": -5,
+    "原力生命故事": -6,
+    "原力創造": -6,
+    "原力创造": -6,
     "論壇": -2,
     "宣傳": -4,
     "mv": -5,
@@ -133,6 +140,26 @@ NEGATIVE_TERMS = {
     "賴清德": -6,
     "民進黨": -6,
     "國民黨": -6,
+    "外星人": -8,
+    "靈異": -8,
+    "灵异": -8,
+    "靈魂": -7,
+    "灵魂": -7,
+    "測驗": -7,
+    "测验": -7,
+    "業力": -7,
+    "业力": -7,
+    "療癒": -4,
+    "疗愈": -4,
+    "羅斯威爾": -8,
+    "罗斯威尔": -8,
+    "濫賭": -8,
+    "滥赌": -8,
+    "賭鬼": -8,
+    "赌鬼": -8,
+    "老王說": -6,
+    "活俠傳": -8,
+    "活侠传": -8,
 }
 
 SEARCH_EXCLUDE_TERMS = [
@@ -193,6 +220,33 @@ NEGATIVE_CHANNEL_TERMS = {
     "法师": -7,
     "寺": -4,
 }
+
+ENTERTAINMENT_TERMS = [
+    "藝人",
+    "艺人",
+    "明星",
+    "女星",
+    "男星",
+    "演員",
+    "演员",
+    "歌手",
+    "偶像",
+    "主持人",
+    "節目",
+    "节目",
+    "綜藝",
+    "综艺",
+    "影集",
+    "劇集",
+    "剧集",
+    "角色",
+    "遊戲",
+    "游戏",
+    "動畫",
+    "动画",
+    "動漫",
+    "动漫",
+]
 
 
 @dataclass
@@ -285,6 +339,12 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=18,
         help="Minimum score for shortlist CSV.",
+    )
+    parser.add_argument(
+        "--max-per-channel",
+        type=int,
+        default=1,
+        help="Maximum rows to keep per channel after scoring. Default: 1",
     )
     parser.add_argument(
         "--sleep",
@@ -482,6 +542,35 @@ def summarize_notes(duration_seconds: int, title_blob: str) -> tuple[int, list[s
     return score, reasons
 
 
+def score_query_match(query: str, metadata_blob: str, source_type: str) -> tuple[int, list[str]]:
+    score = 0
+    reasons: list[str] = []
+    metadata = metadata_blob.lower()
+    query_terms = [term.strip().lower() for term in query.split() if term.strip()]
+
+    matched_terms = [term for term in query_terms if term in metadata]
+    matched_count = len(matched_terms)
+
+    if matched_count >= 3:
+        score += 3
+        reasons.append("+3 查詢貼合")
+    elif matched_count == 2:
+        score += 2
+        reasons.append("+2 查詢貼合")
+    elif matched_count == 1:
+        score += 1
+        reasons.append("+1 查詢略貼")
+    else:
+        if source_type == "general":
+            score -= 8
+            reasons.append("-8 與查詢不貼")
+        else:
+            score -= 4
+            reasons.append("-4 與查詢偏離")
+
+    return score, reasons
+
+
 def score_channel(channel: str) -> tuple[int, list[str]]:
     score = 0
     reasons: list[str] = []
@@ -500,7 +589,7 @@ def classify_source_type(title_blob: str, channel: str) -> str:
 
     if any(term in lowered for term in ["新聞", "新聞台", "live", "直播", "政論"]):
         return "news-risk"
-    if any(term in lowered for term in ["藝人", "艺人", "明星", "女星", "男星", "演員", "演员", "歌手", "偶像", "主持人", "節目", "节目", "綜藝", "综艺"]):
+    if any(term in lowered for term in ENTERTAINMENT_TERMS):
         return "entertainment"
     if any(term in lowered for term in ["佛教", "法師", "法师", "和尚", "僧人", "佛陀", "禪修", "禅修", "寺廟", "寺庙"]):
         return "religion"
@@ -509,6 +598,8 @@ def classify_source_type(title_blob: str, channel: str) -> str:
     if any(term in lowered for term in ["mv", "主題曲", "纯享版", "純享版", "片段", "合唱", "配樂", "配乐"]):
         return "music-fragment"
     if any(term in lowered for term in ["品牌", "品牌重塑", "集團", "企業", "同仁"]):
+        return "brand"
+    if any(term in lowered for term in ["課程", "课程", "畢業生訪談", "毕业生访谈", "原力生命故事", "原力創造", "原力创造"]):
         return "brand"
     if any(term in lowered for term in ["成果", "成果紀錄", "精華版", "基金會", "協會", "社區", "計畫"]):
         return "institutional"
@@ -527,6 +618,8 @@ def normalize_description(text: str) -> str:
 
 def suggest_status(score: int, source_type: str) -> str:
     if source_type in {"news-risk", "politics", "religion", "entertainment", "brand", "music-fragment"}:
+        return "排除"
+    if source_type == "general" and score < 18:
         return "排除"
     if source_type == "institutional":
         return "觀察" if score >= 18 else "排除"
@@ -548,7 +641,7 @@ def score_fame(view_count: int, title_blob: str, channel: str) -> tuple[int, lis
     reasons: list[str] = []
     lowered = " ".join([title_blob, channel]).lower()
 
-    if any(term in lowered for term in ["天王", "影帝", "明星", "女星", "男星", "藝人", "艺人", "總統", "总统", "市長", "市长"]):
+    if any(term in lowered for term in ["天王", "影帝", "明星", "女星", "男星", "藝人", "艺人", "總統", "总统", "市長", "市长", "主演", "角色"]):
         score -= 4
         reasons.append("-4 太有名")
 
@@ -572,24 +665,49 @@ def score_engagement(view_count: int, comment_count: int) -> tuple[int, list[str
     score = 0
     reasons: list[str] = []
 
-    if comment_count >= 200:
+    if comment_count == 0:
+        if view_count >= 10_000:
+            score -= 6
+            reasons.append("-6 有觀看但無心聲")
+        elif view_count >= 1_000:
+            score -= 5
+            reasons.append("-5 有觀看但幾乎無回應")
+        elif view_count >= 100:
+            score -= 4
+            reasons.append("-4 無留言")
+        elif view_count >= 20:
+            score -= 6
+            reasons.append("-6 太冷又無留言")
+        else:
+            score -= 8
+            reasons.append("-8 幾乎沒被觀眾驗證")
+        return score, reasons
+
+    if view_count < 100 and comment_count <= 1:
+        score -= 2
+        reasons.append("-2 觀眾驗證仍薄")
+
+    if comment_count >= 100:
+        score += 3
+        reasons.append("+3 留言明顯")
+    elif comment_count >= 20:
         score += 2
-        reasons.append("+2 留言明顯")
-    elif comment_count >= 50:
+        reasons.append("+2 有留言")
+    elif comment_count >= 5:
         score += 1
-        reasons.append("+1 有留言")
+        reasons.append("+1 有少量留言")
 
     if view_count > 0:
         comments_per_thousand = (comment_count * 1000) / view_count
         if comments_per_thousand >= 5:
             score += 2
             reasons.append("+2 心得互動高")
-        elif comments_per_thousand >= 1.5:
+        elif comments_per_thousand >= 2:
             score += 1
             reasons.append("+1 有互動")
-        elif view_count >= 1000 and comment_count == 0:
-            score -= 1
-            reasons.append("-1 幾乎無回應")
+        elif view_count >= 5_000 and comments_per_thousand < 0.5:
+            score -= 2
+            reasons.append("-2 互動偏低")
 
     return score, reasons
 
@@ -620,12 +738,12 @@ def build_rows(
         duration_seconds = parse_iso8601_duration(content_details.get("duration", ""))
         duration_label = format_duration_label(duration_seconds)
 
-        score_blob = " ".join([query, title, channel, description])
-        score, reasons = summarize_notes(duration_seconds, score_blob)
+        metadata_blob = " ".join([title, channel, description])
+        score, reasons = summarize_notes(duration_seconds, metadata_blob)
         channel_score, channel_reasons = score_channel(channel)
         score += channel_score
         reasons.extend(channel_reasons)
-        source_type = classify_source_type(score_blob, channel)
+        source_type = classify_source_type(metadata_blob, channel)
 
         if source_type == "story-fit":
             score += 2
@@ -651,6 +769,12 @@ def build_rows(
         elif source_type == "politics":
             score -= 8
             reasons.append("-8 政治排除")
+
+        query_match_score, query_match_reasons = score_query_match(
+            query, metadata_blob, source_type
+        )
+        score += query_match_score
+        reasons.extend(query_match_reasons)
 
         fame_score, fame_reasons = score_fame(view_count, title, channel)
         score += fame_score
@@ -697,10 +821,18 @@ def build_rows(
 
 
 def sort_rows(rows: list[TopicRow]) -> list[TopicRow]:
+    def engagement_priority(row: TopicRow) -> float:
+        if row.view_count <= 0:
+            return 0.0
+        return row.comment_count / row.view_count
+
     sorted_rows = sorted(
         rows,
         key=lambda row: (
             -row.score,
+            -(1 if row.comment_count > 0 else 0),
+            -engagement_priority(row),
+            -row.comment_count,
             -row.view_count,
             row.duration_seconds,
             row.title.lower(),
@@ -709,6 +841,46 @@ def sort_rows(rows: list[TopicRow]) -> list[TopicRow]:
     for index, row in enumerate(sorted_rows, start=1):
         row.rank = index
     return sorted_rows
+
+
+def deduplicate_rows(rows: list[TopicRow]) -> list[TopicRow]:
+    best_by_video: dict[str, TopicRow] = {}
+
+    for row in rows:
+        existing = best_by_video.get(row.video_id)
+        if existing is None:
+            best_by_video[row.video_id] = row
+            continue
+
+        if (
+            row.score,
+            row.comment_count,
+            row.view_count,
+        ) > (
+            existing.score,
+            existing.comment_count,
+            existing.view_count,
+        ):
+            best_by_video[row.video_id] = row
+
+    return list(best_by_video.values())
+
+
+def limit_rows_per_channel(rows: list[TopicRow], max_per_channel: int) -> list[TopicRow]:
+    if max_per_channel <= 0:
+        return rows
+
+    kept: list[TopicRow] = []
+    counts: dict[str, int] = {}
+
+    for row in rows:
+        channel_key = row.channel.strip().lower()
+        if counts.get(channel_key, 0) >= max_per_channel:
+            continue
+        counts[channel_key] = counts.get(channel_key, 0) + 1
+        kept.append(row)
+
+    return kept
 
 
 def write_csv(path: Path, rows: list[TopicRow]) -> None:
@@ -813,7 +985,10 @@ def main() -> int:
         time.sleep(max(args.sleep, 0))
 
     filtered_rows = [row for row in all_rows if row.score >= args.min_score]
+    filtered_rows = deduplicate_rows(filtered_rows)
     sorted_rows = sort_rows(filtered_rows)
+    sorted_rows = limit_rows_per_channel(sorted_rows, args.max_per_channel)
+    sorted_rows = sort_rows(sorted_rows)
     for row in sorted_rows:
         if row.score < args.shortlist_min_score or row.comment_count <= 0:
             continue
