@@ -1176,6 +1176,11 @@
                     publishedCount++;
                     const sortVal = cells[2] ? parseInt(cells[2].v) || 999 : 999;
 
+                    let extLink = cells[11] ? String(cells[11].v || '') : '';
+                    if (extLink.startsWith('Date(')) {
+                        extLink = ''; // 過濾掉因為欄位位移造成的舊 Date 字串
+                    }
+
                     tempDb[id] = {
                         id: id,
                         status: status,
@@ -1188,7 +1193,7 @@
                         type: cells[8] ? String(cells[8].v || 'text').toLowerCase().trim() : 'text',
                         mediaUrl: convertDriveLink(cells[9] ? String(cells[9].v || '') : '', 'audio'),
                         text: cells[10] ? String(cells[10].v || '') : '',
-                        externalLink: cells[11] ? String(cells[11].v || '') : ''
+                        externalLink: extLink
                     };
                 });
 
@@ -1328,6 +1333,15 @@
                         </audio>
                     </div>
                 `;
+            } else {
+                // 如果是純文字，也把封面圖顯示在最上方
+                if (story.cover) {
+                    mediaHtml = `
+                        <div style="width: 100%; border-radius: 12px; overflow: hidden; margin-bottom: 20px;">
+                            <img src="${story.cover}" alt="${story.title}" style="width: 100%; height: auto; display: block; object-fit: cover;">
+                        </div>
+                    `;
+                }
             }
 
             let externalLinkHtml = '';
