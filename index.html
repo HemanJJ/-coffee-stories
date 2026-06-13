@@ -1317,8 +1317,8 @@
             let mediaHtml = '';
             if (story.type === 'video') {
                 mediaHtml = `
-                    <div class="dialog-media-container">
-                        <video class="dialog-video" id="dialogVideo" controls playsinline>
+                    <div class="dialog-media-container" style="border-radius: 12px; overflow: hidden; margin-bottom: 20px;">
+                        <video class="dialog-video" id="dialogVideo" controls playsinline poster="${story.cover}" style="width: 100%; max-height: 400px; background-color: #000;">
                             <source src="${story.mediaUrl}" type="video/mp4">
                             您的瀏覽器不支援影片播放。
                         </video>
