@@ -1148,7 +1148,8 @@
             try {
                 badge.innerHTML = `<span>🟡 正在從 CMS 載入故事...</span>`;
 
-                const url = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json`;
+                // 加上時間戳記避免瀏覽器快取
+                const url = `https://docs.google.com/spreadsheets/d/${GOOGLE_SHEET_ID}/gviz/tq?tqx=out:json&t=${new Date().getTime()}`;
                 const response = await fetch(url);
                 if (!response.ok) throw new Error("網路請求失敗");
                 
