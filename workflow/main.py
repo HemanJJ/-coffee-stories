@@ -99,7 +99,24 @@ async def main():
         print("⚠️ 封面圖生成失敗，稍後請手動處理")
 
     # 4. 配音
-    print("\n[4/5] 正在請曉臻朗讀故事...")
+    print("\n[4/5] 正在準備配音...")
+    
+    while True:
+        try:
+            voice_choice = input("請選擇說故事的聲音 (1: 溫暖女聲-曉臻, 2: 沉穩男聲-雲哲) [預設 1]: ").strip()
+            if voice_choice in ["", "1"]:
+                voice_type = "female"
+                print("👉 已選擇：溫暖女聲")
+                break
+            elif voice_choice == "2":
+                voice_type = "male"
+                print("👉 已選擇：沉穩男聲")
+                break
+            else:
+                print("❌ 無效的選擇，請輸入 1 或 2。")
+        except EOFError:
+            voice_type = "female"
+            break
     
     # 清理要配音的文字：我們只希望語音唸出「真正的故事正文」，不該唸出分享文案或標籤！
     import re
@@ -118,8 +135,8 @@ async def main():
     # 清理多餘空白行
     voice_text = '\n'.join([line for line in voice_text.splitlines() if line.strip()])
     
-    # 預設使用女聲
-    await generate_voice(voice_text, str(audio_path), "female")
+    # 執行配音
+    await generate_voice(voice_text, str(audio_path), voice_type)
     print("✅ 語音生成完畢")
 
     # 5. 上傳提示
