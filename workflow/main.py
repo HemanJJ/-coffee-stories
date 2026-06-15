@@ -1,23 +1,53 @@
 import os
-import sys
 import time
 import asyncio
+import json
+from pathlib import Path
 from module_1_youtube import fetch_transcript
 from module_2_story import generate_story
 from module_3_image import generate_image
 from module_4_voice import generate_voice
-import subprocess
 
-# ⚠️ 請將下方的 API_KEY 換成您新申請的「免費版」金鑰
-API_KEY = "請在這裡貼上您的新金鑰"
-GITHUB_REPO_PATH = ".." # 改為相對路徑，因為 workflow 資料夾已經搬到 GitHub 資料夾裡了
+WORKFLOW_DIR = Path(__file__).resolve().parent
+REPO_ROOT = WORKFLOW_DIR.parent
 GITHUB_PAGES_URL = "https://hemanjj.github.io/-coffee-stories"
+
+
+def read_env_file(path):
+    values = {}
+    if not path.exists():
+        return values
+
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        values[key.strip()] = value.strip().strip('"').strip("'")
+    return values
+
+
+def get_gemini_api_key():
+    env_file_key = read_env_file(REPO_ROOT / ".env").get("GEMINI_API_KEY", "").strip()
+    if env_file_key:
+        return env_file_key
+    return os.environ.get("GEMINI_API_KEY", "").strip()
+
 
 async def main():
     print("=========================================")
     print("☕ 咖啡時光廊 - 自動化生成工作流")
     print("=========================================")
-    url = input("請輸入 YouTube 網址 (或直接按 Enter 跳過測試純文本): ").strip()
+    api_key = get_gemini_api_key()
+    if not api_key:
+        print("缺少 GEMINI_API_KEY。請先在 .env 加上 GEMINI_API_KEY=\"你的key\"")
+        return
+
+    try:
+        url = input("請輸入 YouTube 網址 (或直接按 Enter 跳過測試純文本): ").strip()
+    except EOFError:
+        print("已取消。")
+        return
 
     raw_text = ""
     if url:
@@ -29,13 +59,17 @@ async def main():
             return
         print(f"✅ 成功抓取字幕，長度: {len(raw_text)} 字")
     else:
-        raw_text = input("請輸入一段文字來寫故事: ").strip()
+        try:
+            raw_text = input("請輸入一段文字來寫故事: ").strip()
+        except EOFError:
+            print("已取消。")
+            return
         if not raw_text:
             return
 
     # 2. 寫作
     print("\n[2/5] 正在請 Gemini 撰寫咖啡故事...")
-    story_data = generate_story(API_KEY, raw_text)
+    story_data = generate_story(api_key, raw_text)
     if not story_data:
         return
     
@@ -49,19 +83,19 @@ async def main():
     image_filename = f"story_{timestamp}.jpg"
     audio_filename = f"story_{timestamp}.mp3"
     
-    image_path = os.path.join(GITHUB_REPO_PATH, "assets", "images", image_filename)
-    audio_path = os.path.join(GITHUB_REPO_PATH, "assets", "audio", audio_filename)
+    image_path = REPO_ROOT / "assets" / "images" / image_filename
+    audio_path = REPO_ROOT / "assets" / "audio" / audio_filename
     
     # 建立資料夾
-    os.makedirs(os.path.dirname(image_path), exist_ok=True)
-    os.makedirs(os.path.dirname(audio_path), exist_ok=True)
+    image_path.parent.mkdir(parents=True, exist_ok=True)
+    audio_path.parent.mkdir(parents=True, exist_ok=True)
 
     # 3. 生圖
     print("\n[3/5] 正在生成 2K 故事封面圖...")
     # 用 Pollinations.ai 替代 Imagen 3
     image_bytes = generate_image(title)
     if image_bytes:
-        with open(image_path, "wb") as f:
+        with image_path.open("wb") as f:
             f.write(image_bytes)
         print("✅ 封面圖生成完畢")
     else:
@@ -70,7 +104,7 @@ async def main():
     # 4. 配音
     print("\n[4/5] 正在請曉臻朗讀故事...")
     # 預設使用女聲
-    await generate_voice(text, audio_path, "female")
+    await generate_voice(text, str(audio_path), "female")
     print("✅ 語音生成完畢")
 
     # 5. 上傳提示
@@ -82,12 +116,11 @@ async def main():
     audio_url = f"{GITHUB_PAGES_URL}/assets/audio/{audio_filename}"
     
     # 將資料存成 JSON，供 CMS 直接匯入
-    import json
     story_export = {
         "title": title,
         "excerpt": excerpt,
         "mediaUrl": audio_url,
-        "externalLink": youtube_url,
+        "externalLink": url,
         "cover": image_url,
         "text": text,
         "type": "audio",
@@ -96,10 +129,10 @@ async def main():
     }
     
     # 每次執行都「覆蓋」舊檔案，確保裡面永遠只有「最新產生的一次」的故事
-    export_path = "ai_stories.json"
+    export_path = WORKFLOW_DIR / "ai_stories.json"
     stories_list = [story_export]
     
-    with open(export_path, "w", encoding="utf-8") as f:
+    with export_path.open("w", encoding="utf-8") as f:
         json.dump(stories_list, f, ensure_ascii=False, indent=4)
     
     print("\n=========================================")

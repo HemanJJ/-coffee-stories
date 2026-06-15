@@ -13,6 +13,7 @@ import argparse
 import csv
 import json
 import os
+import random
 import re
 import time
 from dataclasses import dataclass
@@ -25,7 +26,17 @@ from urllib.request import urlopen
 
 YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3"
 DEFAULT_QUERY_FILE = Path(__file__).with_name("topic_queries.txt")
+DEFAULT_ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
 VIDEO_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{11}$")
+
+INTENT_QUERY_TERMS = {
+    "object": ["家書", "老照片", "舊物", "錄音", "日記", "遺物"],
+    "family": ["父親", "母親", "外公", "外婆", "家庭", "家人"],
+    "home": ["回家", "故鄉", "離家", "返鄉"],
+    "care": ["陪伴", "照顧者", "陪病", "長照"],
+    "restart": ["重新開始", "中年", "轉職", "人生下半場"],
+    "dialect": ["方言", "台語", "客語", "潮汕話", "家族記憶"],
+}
 
 POSITIVE_TERMS = {
     "訪談": 3,
@@ -85,6 +96,17 @@ POSITIVE_TERMS = {
 NEGATIVE_TERMS = {
     "shorts": -5,
     "short": -3,
+    "lyric": -8,
+    "lyrics": -8,
+    "歌詞": -8,
+    "歌词": -8,
+    "動態歌詞": -8,
+    "动态歌词": -8,
+    "歌曲": -7,
+    "原創歌曲": -8,
+    "原创歌曲": -8,
+    "翻唱": -6,
+    "cover": -6,
     "看哭": -4,
     "催淚": -3,
     "爆哭": -4,
@@ -158,8 +180,38 @@ NEGATIVE_TERMS = {
     "演员": -5,
     "歌手": -5,
     "偶像": -5,
+    "曾寶儀": -8,
+    "曾宝仪": -8,
+    "張頌文": -8,
+    "张颂文": -8,
+    "狂飆": -8,
+    "狂飙": -8,
     "娛樂人物": -6,
     "娱乐人物": -6,
+    "告別式": -5,
+    "告别式": -5,
+    "告別典禮": -6,
+    "告别典礼": -6,
+    "追思": -5,
+    "紀念影片": -4,
+    "生命影片": -5,
+    "紀錄片頭": -5,
+    "纪录片头": -5,
+    "apple daily": -6,
+    "蘋果日報": -6,
+    "苹果日报": -6,
+    "果籽": -5,
+    "飲食男女": -5,
+    "饮食男女": -5,
+    "原刊日期": -5,
+    "ep": -4,
+    "cut": -5,
+    "霸总": -6,
+    "霸總": -6,
+    "女主": -5,
+    "原创歌曲": -6,
+    "原創歌曲": -6,
+    "vlog": -5,
     "服貿": -6,
     "柯文哲": -6,
     "賴清德": -6,
@@ -228,6 +280,12 @@ SEARCH_EXCLUDE_TERMS = [
     "男星",
     "演員",
     "演员",
+    "曾寶儀",
+    "曾宝仪",
+    "張頌文",
+    "张颂文",
+    "狂飆",
+    "狂飙",
     "歌手",
     "偶像",
 ]
@@ -245,6 +303,47 @@ NEGATIVE_CHANNEL_TERMS = {
     "法师": -7,
     "寺": -4,
 }
+
+PRIVATE_MEMORIAL_TERMS = [
+    "告別式",
+    "告别式",
+    "告別典禮",
+    "告别典礼",
+    "追思",
+    "生命影片",
+    "紀念影片",
+    "紀錄片頭",
+    "纪录片头",
+    "訃聞",
+    "讣闻",
+]
+
+MEDIA_NOISE_TERMS = [
+    "apple daily",
+    "蘋果日報",
+    "苹果日报",
+    "果籽",
+    "飲食男女",
+    "饮食男女",
+    "原刊日期",
+    "ep",
+    "cut",
+    "霸总",
+    "霸總",
+    "女主",
+    "lyric",
+    "lyrics",
+    "歌詞",
+    "歌词",
+    "動態歌詞",
+    "动态歌词",
+    "歌曲",
+    "原创歌曲",
+    "原創歌曲",
+    "翻唱",
+    "cover",
+    "vlog",
+]
 
 ENTERTAINMENT_TERMS = [
     "藝人",
@@ -290,6 +389,8 @@ class TopicRow:
     score: int
     score_reasons: str
     source_type: str
+    availability: str
+    transcript_status: str
     auto_suggestion: str
     manual_status: str
     manual_note: str
@@ -298,14 +399,35 @@ class TopicRow:
     description: str
 
 
+def read_env_file(path: Path) -> dict[str, str]:
+    values: dict[str, str] = {}
+    if not path.exists():
+        return values
+
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        values[key.strip()] = value.strip().strip('"').strip("'")
+    return values
+
+
+def get_default_api_key() -> str:
+    env_key = os.environ.get("YOUTUBE_API_KEY", "").strip()
+    if env_key:
+        return env_key
+    return read_env_file(DEFAULT_ENV_FILE).get("YOUTUBE_API_KEY", "").strip()
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Search YouTube topics and export a Google-Sheet-ready CSV."
     )
     parser.add_argument(
         "--api-key",
-        default=os.environ.get("YOUTUBE_API_KEY", "").strip(),
-        help="YouTube Data API key. Defaults to YOUTUBE_API_KEY env var.",
+        default=get_default_api_key(),
+        help="YouTube Data API key. Defaults to YOUTUBE_API_KEY env var or .env.",
     )
     parser.add_argument(
         "--query",
@@ -318,6 +440,29 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=DEFAULT_QUERY_FILE,
         help="UTF-8 text file with one query per line.",
+    )
+    parser.add_argument(
+        "--hook",
+        default="",
+        help="Today's hook phrase to append to every query, e.g. 老照片 or 一封信.",
+    )
+    parser.add_argument(
+        "--intent",
+        choices=sorted(INTENT_QUERY_TERMS),
+        default="",
+        help="Focus query set for today: object, family, home, care, restart, dialect.",
+    )
+    parser.add_argument(
+        "--sample-queries",
+        type=int,
+        default=0,
+        help="Randomly sample N queries after intent/hook expansion. Saves quota.",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=0,
+        help="Seed for --sample-queries. Default 0 means use today's date.",
     )
     parser.add_argument(
         "--max-results",
@@ -362,7 +507,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--shortlist-min-score",
         type=int,
-        default=18,
+        default=15,
         help="Minimum score for shortlist CSV.",
     )
     parser.add_argument(
@@ -370,6 +515,21 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=1,
         help="Maximum rows to keep per channel after scoring. Default: 1",
+    )
+    parser.add_argument(
+        "--allow-unusable",
+        action="store_true",
+        help="Keep videos that are private, unlisted, live, or not embeddable.",
+    )
+    parser.add_argument(
+        "--story-only",
+        action="store_true",
+        help="Keep only rows classified as story-fit after scoring.",
+    )
+    parser.add_argument(
+        "--require-transcript",
+        action="store_true",
+        help="Keep only videos with a fetchable YouTube transcript/caption.",
     )
     parser.add_argument(
         "--sleep",
@@ -397,6 +557,23 @@ def read_queries(args: argparse.Namespace) -> list[str]:
                 continue
             queries.append(normalized)
             seen.add(normalized)
+
+    if args.intent:
+        intent_terms = INTENT_QUERY_TERMS[args.intent]
+        queries = [
+            query
+            for query in queries
+            if any(term in query for term in intent_terms)
+        ]
+
+    if args.hook:
+        hook = args.hook.strip()
+        queries = [f"{query} {hook}" for query in queries]
+
+    if args.sample_queries and len(queries) > args.sample_queries:
+        seed = args.seed or int(time.strftime("%Y%m%d"))
+        sampler = random.Random(seed)
+        queries = sampler.sample(queries, args.sample_queries)
 
     return queries
 
@@ -455,7 +632,7 @@ def fetch_video_details(api_key: str, video_ids: Iterable[str]) -> dict[str, dic
 
     params = {
         "key": api_key,
-        "part": "snippet,contentDetails,statistics",
+        "part": "snippet,contentDetails,statistics,status",
         "id": ",".join(video_ids),
     }
 
@@ -470,7 +647,7 @@ def fetch_video_details(api_key: str, video_ids: Iterable[str]) -> dict[str, dic
                     "videos",
                     {
                         "key": api_key,
-                        "part": "snippet,contentDetails,statistics",
+                        "part": "snippet,contentDetails,statistics,status",
                         "id": video_id,
                     },
                 )
@@ -511,6 +688,44 @@ def fetch_top_comment_excerpt(api_key: str, video_id: str) -> str:
     )
     text = normalize_description(snippet.get("textDisplay") or "")
     return text[:140]
+
+
+def video_availability(detail: dict) -> tuple[bool, str]:
+    if not detail:
+        return False, "missing-details"
+
+    snippet = detail.get("snippet", {})
+    status = detail.get("status", {})
+
+    privacy_status = status.get("privacyStatus", "")
+    embeddable = status.get("embeddable")
+    upload_status = status.get("uploadStatus", "")
+    live_content = snippet.get("liveBroadcastContent", "")
+
+    if upload_status and upload_status != "processed":
+        return False, f"upload:{upload_status}"
+    if privacy_status != "public":
+        return False, f"privacy:{privacy_status or 'unknown'}"
+    if embeddable is False:
+        return False, "not-embeddable"
+    if live_content in {"live", "upcoming"}:
+        return False, f"live:{live_content}"
+
+    return True, "usable"
+
+
+def transcript_availability(video_id: str) -> tuple[bool, str]:
+    try:
+        from youtube_transcript_api import YouTubeTranscriptApi
+    except ImportError:
+        return False, "transcript:tool-missing"
+
+    try:
+        YouTubeTranscriptApi().list(video_id)
+    except Exception as exc:  # The package exposes several version-specific errors.
+        return False, f"transcript:{exc.__class__.__name__}"
+
+    return True, "transcript:available"
 
 
 def parse_iso8601_duration(value: str) -> int:
@@ -616,11 +831,40 @@ def classify_source_type(title_blob: str, channel: str) -> str:
         return "news-risk"
     if any(term in lowered for term in ENTERTAINMENT_TERMS):
         return "entertainment"
+    if any(term in lowered for term in PRIVATE_MEMORIAL_TERMS):
+        return "private-memorial"
+    if any(term in lowered for term in MEDIA_NOISE_TERMS):
+        return "media-noise"
     if any(term in lowered for term in ["佛教", "法師", "法师", "和尚", "僧人", "佛陀", "禪修", "禅修", "寺廟", "寺庙"]):
         return "religion"
     if any(term in lowered for term in ["毛澤東", "毛泽东", "總統", "总统", "市長", "市长", "立委", "議員", "议员", "部長", "部长"]):
         return "politics"
-    if any(term in lowered for term in ["mv", "主題曲", "纯享版", "純享版", "片段", "合唱", "配樂", "配乐"]):
+    if any(
+        term in lowered
+        for term in [
+            "mv",
+            "music video",
+            "主題曲",
+            "主题曲",
+            "纯享版",
+            "純享版",
+            "片段",
+            "合唱",
+            "配樂",
+            "配乐",
+            "lyric",
+            "lyrics",
+            "歌詞",
+            "歌词",
+            "動態歌詞",
+            "动态歌词",
+            "歌曲",
+            "原創歌曲",
+            "原创歌曲",
+            "翻唱",
+            "cover",
+        ]
+    ):
         return "music-fragment"
     if any(term in lowered for term in ["品牌", "品牌重塑", "集團", "企業", "同仁"]):
         return "brand"
@@ -642,7 +886,7 @@ def normalize_description(text: str) -> str:
 
 
 def suggest_status(score: int, source_type: str) -> str:
-    if source_type in {"news-risk", "politics", "religion", "entertainment", "brand", "music-fragment"}:
+    if source_type in {"news-risk", "politics", "religion", "entertainment", "brand", "music-fragment", "private-memorial", "media-noise"}:
         return "排除"
     if source_type == "general" and score < 18:
         return "排除"
@@ -666,7 +910,10 @@ def score_fame(view_count: int, title_blob: str, channel: str) -> tuple[int, lis
     reasons: list[str] = []
     lowered = " ".join([title_blob, channel]).lower()
 
-    if any(term in lowered for term in ["天王", "影帝", "明星", "女星", "男星", "藝人", "艺人", "總統", "总统", "市長", "市长", "主演", "角色"]):
+    if any(term in lowered for term in ["曾寶儀", "曾宝仪", "張頌文", "张颂文", "狂飆", "狂飙"]):
+        score -= 10
+        reasons.append("-10 明確名人排除")
+    elif any(term in lowered for term in ["天王", "影帝", "明星", "女星", "男星", "藝人", "艺人", "總統", "总统", "市長", "市长", "主演", "角色"]):
         score -= 4
         reasons.append("-4 太有名")
 
@@ -741,6 +988,9 @@ def build_rows(
     query: str,
     search_items: list[dict],
     detail_map: dict[str, dict],
+    allow_unusable: bool,
+    story_only: bool,
+    require_transcript: bool,
 ) -> list[TopicRow]:
     rows: list[TopicRow] = []
 
@@ -750,6 +1000,10 @@ def build_rows(
             continue
 
         detail = detail_map.get(video_id, {})
+        usable, availability = video_availability(detail)
+        if not usable and not allow_unusable:
+            continue
+
         snippet = detail.get("snippet", item.get("snippet", {}))
         statistics = detail.get("statistics", {})
         content_details = detail.get("contentDetails", {})
@@ -770,6 +1024,9 @@ def build_rows(
         reasons.extend(channel_reasons)
         source_type = classify_source_type(metadata_blob, channel)
 
+        if story_only and source_type != "story-fit":
+            continue
+
         if source_type == "story-fit":
             score += 2
             reasons.append("+2 故事貼合")
@@ -788,6 +1045,12 @@ def build_rows(
         elif source_type == "entertainment":
             score -= 7
             reasons.append("-7 娛樂人物排除")
+        elif source_type == "private-memorial":
+            score -= 8
+            reasons.append("-8 私人追思片")
+        elif source_type == "media-noise":
+            score -= 7
+            reasons.append("-7 媒體或劇情雜訊")
         elif source_type == "religion":
             score -= 8
             reasons.append("-8 佛教排除")
@@ -817,6 +1080,12 @@ def build_rows(
             score -= 2
             reasons.append("-2 缺少標題")
 
+        transcript_status = "not-checked"
+        if require_transcript:
+            has_transcript, transcript_status = transcript_availability(video_id)
+            if not has_transcript:
+                continue
+
         rows.append(
             TopicRow(
                 rank=0,
@@ -833,6 +1102,8 @@ def build_rows(
                 score=score,
                 score_reasons=" | ".join(reasons),
                 source_type=source_type,
+                availability=availability,
+                transcript_status=transcript_status,
                 auto_suggestion=suggest_status(score, source_type),
                 manual_status="",
                 manual_note="",
@@ -919,6 +1190,8 @@ def write_csv(path: Path, rows: list[TopicRow]) -> None:
                 "score",
                 "score_reasons",
                 "source_type",
+                "availability",
+                "transcript_status",
                 "auto_suggestion",
                 "manual_status",
                 "manual_note",
@@ -943,6 +1216,8 @@ def write_csv(path: Path, rows: list[TopicRow]) -> None:
                     "score": row.score,
                     "score_reasons": row.score_reasons,
                     "source_type": row.source_type,
+                    "availability": row.availability,
+                    "transcript_status": row.transcript_status,
                     "auto_suggestion": row.auto_suggestion,
                     "manual_status": row.manual_status,
                     "manual_note": row.manual_note,
@@ -960,9 +1235,14 @@ def write_csv(path: Path, rows: list[TopicRow]) -> None:
             )
 
 
-def write_shortlist(path: Path, rows: list[TopicRow], min_score: int) -> None:
+def write_shortlist(path: Path, rows: list[TopicRow], min_score: int) -> tuple[int, bool]:
     shortlisted = [row for row in rows if row.score >= min_score]
+    used_fallback = False
+    if not shortlisted and rows:
+        shortlisted = rows[: min(5, len(rows))]
+        used_fallback = True
     write_csv(path, shortlisted)
+    return len(shortlisted), used_fallback
 
 
 def print_summary(rows: list[TopicRow], output: Path) -> None:
@@ -1005,7 +1285,14 @@ def main() -> int:
         )
         video_ids = [item.get("id", {}).get("videoId", "") for item in search_items]
         details = fetch_video_details(args.api_key, video_ids)
-        rows = build_rows(query, search_items, details)
+        rows = build_rows(
+            query,
+            search_items,
+            details,
+            args.allow_unusable,
+            args.story_only,
+            args.require_transcript,
+        )
         all_rows.extend(rows)
         time.sleep(max(args.sleep, 0))
 
@@ -1014,18 +1301,33 @@ def main() -> int:
     sorted_rows = sort_rows(filtered_rows)
     sorted_rows = limit_rows_per_channel(sorted_rows, args.max_per_channel)
     sorted_rows = sort_rows(sorted_rows)
+    if not sorted_rows:
+        print(
+            "Wrote 0 rows. Existing CSV files were kept. "
+            "Try a broader hook, a different intent, or a larger --sample-queries."
+        )
+        return 0
+
     for row in sorted_rows:
         if row.score < args.shortlist_min_score or row.comment_count <= 0:
             continue
         row.top_comment_excerpt = fetch_top_comment_excerpt(args.api_key, row.video_id)
         time.sleep(max(args.sleep, 0))
     write_csv(args.output, sorted_rows)
-    write_shortlist(args.shortlist_output, sorted_rows, args.shortlist_min_score)
-    print_summary(sorted_rows, args.output)
-    print(
-        f"Shortlist ({args.shortlist_min_score}+) written to "
-        f"{args.shortlist_output}"
+    shortlist_count, used_fallback = write_shortlist(
+        args.shortlist_output, sorted_rows, args.shortlist_min_score
     )
+    print_summary(sorted_rows, args.output)
+    if used_fallback:
+        print(
+            f"No rows reached shortlist score {args.shortlist_min_score}. "
+            f"Wrote top {shortlist_count} review rows to {args.shortlist_output}."
+        )
+    else:
+        print(
+            f"Shortlist ({args.shortlist_min_score}+) written to "
+            f"{args.shortlist_output}"
+        )
     return 0
 
 

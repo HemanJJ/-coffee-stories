@@ -1,9 +1,14 @@
 from google import genai
 from PIL import Image
 from io import BytesIO
+import os
 
 try:
-    client = genai.Client(api_key="AQ.Ab8RN6IXOoK5MY2AL5mqsS3GPLDe7q1SQ--wE7VUB4S_9WcaCg")
+    api_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    if not api_key:
+        raise RuntimeError("Missing GEMINI_API_KEY environment variable.")
+
+    client = genai.Client(api_key=api_key)
     result = client.models.generate_images(
         model='imagen-3.0-generate-001',
         prompt='A simple coffee cup',
