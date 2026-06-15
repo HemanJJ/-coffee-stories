@@ -9,7 +9,7 @@
   - `[x]` 使用者試聽與確認音色
 - `[/]` 階段二：撰寫五大核心模組程式碼
   - `[ ]` `module_1_youtube.py` (自動抓字幕)
-  - `[ ]` `module_2_story.py` (Gemini API 寫作)
+  - `[ ]` `module_2_story.py` (Ollama/Qwen 本機寫作)
   - `[ ]` `module_3_image.py` (AI 生圖替代方案)
   - `[ ]` `module_4_voice.py` (微軟 Edge TTS 整合)
   - `[ ]` `main.py` (總控制器與上傳 Github)

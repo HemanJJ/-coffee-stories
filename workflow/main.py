@@ -27,21 +27,18 @@ def read_env_file(path):
     return values
 
 
-def get_gemini_api_key():
-    env_file_key = read_env_file(REPO_ROOT / ".env").get("GEMINI_API_KEY", "").strip()
-    if env_file_key:
-        return env_file_key
-    return os.environ.get("GEMINI_API_KEY", "").strip()
+def get_ollama_model():
+    env_file_model = read_env_file(REPO_ROOT / ".env").get("OLLAMA_MODEL", "").strip()
+    if env_file_model:
+        return env_file_model
+    return os.environ.get("OLLAMA_MODEL", "qwen2.5:7b").strip()
 
 
 async def main():
     print("=========================================")
     print("☕ 咖啡時光廊 - 自動化生成工作流")
     print("=========================================")
-    api_key = get_gemini_api_key()
-    if not api_key:
-        print("缺少 GEMINI_API_KEY。請先在 .env 加上 GEMINI_API_KEY=\"你的key\"")
-        return
+    story_model = get_ollama_model()
 
     try:
         url = input("請輸入 YouTube 網址 (或直接按 Enter 跳過測試純文本): ").strip()
@@ -68,8 +65,8 @@ async def main():
             return
 
     # 2. 寫作
-    print("\n[2/5] 正在請 Gemini 撰寫咖啡故事...")
-    story_data = generate_story(api_key, raw_text)
+    print(f"\n[2/5] 正在請 Ollama/{story_model} 撰寫咖啡故事...")
+    story_data = generate_story(raw_text, story_model)
     if not story_data:
         return
     

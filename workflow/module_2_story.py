@@ -1,6 +1,10 @@
-from google import genai
 import json
 import re
+import requests
+
+
+OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
+MAX_SOURCE_CHARS = 5000
 
 
 def warn_if_too_promotional(text):
@@ -22,8 +26,35 @@ def warn_if_too_promotional(text):
             print(f"   - 出現推銷感詞語：{', '.join(sales_hits)}")
 
 
-def generate_story(api_key, raw_text):
-    client = genai.Client(api_key=api_key)
+def extract_json(text):
+    cleaned = text.strip()
+    if cleaned.startswith("```json"):
+        cleaned = cleaned[7:]
+    if cleaned.startswith("```"):
+        cleaned = cleaned[3:]
+    if cleaned.endswith("```"):
+        cleaned = cleaned[:-3]
+
+    cleaned = cleaned.strip()
+    if cleaned.startswith("{") and cleaned.endswith("}"):
+        return cleaned
+
+    match = re.search(r"\{.*\}", cleaned, flags=re.S)
+    if match:
+        return match.group(0)
+
+    return cleaned
+
+
+def trim_source_text(raw_text):
+    text = (raw_text or "").strip()
+    if len(text) <= MAX_SOURCE_CHARS:
+        return text
+    return text[:MAX_SOURCE_CHARS] + "\n\n[字幕過長，後段已省略，請根據前段材料整理故事。]"
+
+
+def generate_story(raw_text, model="qwen2.5:7b"):
+    source_text = trim_source_text(raw_text)
     prompt = f"""
 你現在是「咖啡時光廊」的沉浸式故事編輯，不是品牌行銷顧問。
 
@@ -42,6 +73,8 @@ def generate_story(api_key, raw_text):
 9. 適合 50～70 歲的人讀，文字要清楚、克制、真誠，不煽情。
 10. 不要捏造字幕中沒有的重大情節；可以重組敘事，但要忠於原始材料。
 11. 請嚴格輸出以下 JSON 格式，不要加任何 markdown 標記：
+12. 【極度重要】在 JSON 的字串值中，絕對不可使用半形雙引號 `"`！若需引號請一律使用全形 `「` 和 `」`！
+13. 【極度重要】所有換行都必須使用字串 `\\n`，絕對不可產生真實的換行符號！
 {{
     "title": "動人的標題(不超過15個字)",
     "excerpt": "像故事卡片的摘要(約30字，不要廣告語)",
@@ -49,26 +82,38 @@ def generate_story(api_key, raw_text):
 }}
 
 原始字幕：
-{raw_text}
+{source_text}
 """
     try:
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt,
+        print(f"使用本機 Ollama 模型：{model}")
+        response = requests.post(
+            OLLAMA_URL,
+            json={
+                "model": model,
+                "prompt": prompt,
+                "stream": False,
+                "format": "json",
+                "options": {
+                    "temperature": 0.35,
+                    "num_ctx": 4096,
+                    "num_predict": 1800,
+                },
+            },
+            timeout=600,
         )
+        response.raise_for_status()
         
-        # 嘗試清理可能帶有 Markdown 的 JSON 格式字串
-        text = response.text.strip()
-        if text.startswith("```json"):
-            text = text[7:]
-        if text.startswith("```"):
-            text = text[3:]
-        if text.endswith("```"):
-            text = text[:-3]
+        text = response.json().get("response", "")
+        try:
+            data = json.loads(extract_json(text))
+        except json.JSONDecodeError as e:
+            print(f"❌ JSON 解析失敗: {e}")
+            print(f"--- 原始 Ollama 輸出 ---\n{text}\n----------------")
+            return None
             
-        data = json.loads(text.strip())
         warn_if_too_promotional(data.get("text", ""))
         return data
     except Exception as e:
-        print(f"❌ 故事生成失敗: {e}")
+        print(f"❌ Ollama 故事生成失敗: {e}")
+        print("請確認 Ollama 已啟動，且模型已安裝，例如：ollama pull qwen2.5:7b")
         return None

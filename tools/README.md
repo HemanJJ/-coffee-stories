@@ -35,7 +35,7 @@ python3 menu.py yt-find
 
 - `yt-find`：找 YouTube 題材，產出 `youtube_topic_candidates.csv`
 - `yt-find` 也會產出好找的短名 `shortlist.csv`
-- `story-make`：把 YouTube 字幕或文字轉成咖啡故事，產出 `workflow/ai_stories.json`
+- `story-make`：用本機 Ollama/Qwen 把 YouTube 字幕或文字轉成咖啡故事，產出 `workflow/ai_stories.json`
 
 這個工具是拿來幫你從 YouTube 找「比較像咖啡時光廊」的小人物故事題材。
 

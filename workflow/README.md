@@ -19,7 +19,7 @@ python3 menu.py story-make
 - `yt-find`：找 YouTube 題材，產出 `youtube_topic_candidates.csv`
 - `story-make`：把 YouTube 字幕或文字轉成咖啡故事，產出 `workflow/ai_stories.json`
 
-這個流程會把一支 YouTube 影片字幕，或一段你自己貼上的文字，轉成：
+這個流程會把一支 YouTube 影片字幕，或一段你自己貼上的文字，交給本機 Ollama/Qwen 7B 轉成：
 
 - 咖啡故事文案
 - 封面圖片
@@ -54,20 +54,26 @@ source workflow/venv/bin/activate
 pip install -r workflow/requirements.txt
 ```
 
-在專案根目錄的 `.env` 裡放 Gemini key：
+先確認 Ollama 已啟動，並且有 Qwen 7B 模型：
 
 ```bash
-GEMINI_API_KEY="你的Gemini API key"
+ollama pull qwen2.5:7b
+```
+
+在專案根目錄的 `.env` 裡設定本機模型：
+
+```bash
+OLLAMA_MODEL="qwen2.5:7b"
 ```
 
 如果同一個 `.env` 已經有 YouTube key，可以長這樣：
 
 ```bash
 YOUTUBE_API_KEY="你的YouTube API key"
-GEMINI_API_KEY="你的Gemini API key"
+OLLAMA_MODEL="qwen2.5:7b"
 ```
 
-`.env` 已經被 `.gitignore` 忽略，不會進 git。
+`.env` 已經被 `.gitignore` 忽略，不會進 git。故事生成現在不需要 Gemini API key。
 
 ## 平常怎麼跑
 
@@ -116,9 +122,30 @@ workflow/ai_stories.json
 
 ## 常見問題
 
-### 缺少 GEMINI_API_KEY
+### Ollama 連不上
 
-代表 `.env` 裡沒有放 Gemini key。
+請先確認 Ollama app 或背景服務已啟動。
+
+可以先測：
+
+```bash
+ollama list
+workflow/venv/bin/python workflow/test_ollama.py
+```
+
+### 找不到模型
+
+如果看到找不到 `qwen2.5:7b`，請先安裝：
+
+```bash
+ollama pull qwen2.5:7b
+```
+
+如果你本機模型名稱不同，改 `.env`：
+
+```bash
+OLLAMA_MODEL="你的模型名稱"
+```
 
 ### 無法抓取字幕
 
