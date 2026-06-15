@@ -100,8 +100,26 @@ async def main():
 
     # 4. 配音
     print("\n[4/5] 正在請曉臻朗讀故事...")
+    
+    # 清理要配音的文字：我們只希望語音唸出「真正的故事正文」，不該唸出分享文案或標籤！
+    import re
+    voice_text = text
+    
+    # 如果內容包含【故事裡的光】，則切斷，只保留前面的正文
+    if "【故事裡的光】" in voice_text:
+        voice_text = voice_text.split("【故事裡的光】")[0]
+    elif "【包裝短句】" in voice_text:
+        voice_text = voice_text.split("【包裝短句】")[0]
+        
+    # 清理殘留的標題，例如 【故事】
+    voice_text = re.sub(r'【.*?】', '', voice_text)
+    # 清理 Hashtag
+    voice_text = re.sub(r'#\S+', '', voice_text)
+    # 清理多餘空白行
+    voice_text = '\n'.join([line for line in voice_text.splitlines() if line.strip()])
+    
     # 預設使用女聲
-    await generate_voice(text, str(audio_path), "female")
+    await generate_voice(voice_text, str(audio_path), "female")
     print("✅ 語音生成完畢")
 
     # 5. 上傳提示
