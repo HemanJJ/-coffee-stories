@@ -11,19 +11,23 @@ def warn_if_too_promotional(text):
     coffee_terms = ["咖啡"]
     brand_terms = ["光碼創意", "LightCode", "品牌", "AI", "設計"]
     sales_terms = ["購買", "品嚐本品牌", "精心烘焙", "每一杯", "傳遞光", "媒介"]
+    narration_noise_terms = ["【", "】", "#", "Hashtag", "FB/LINE", "包裝", "標題：", "摘要："]
 
     coffee_count = sum(text.count(term) for term in coffee_terms)
     brand_count = sum(text.count(term) for term in brand_terms)
     sales_hits = [term for term in sales_terms if term in text]
+    narration_noise_hits = [term for term in narration_noise_terms if term in text]
 
-    if coffee_count > 1 or brand_count > 1 or sales_hits:
-        print("⚠️ 這次輸出可能仍偏行銷，建議人工複查：")
+    if coffee_count > 1 or brand_count > 1 or sales_hits or narration_noise_hits:
+        print("⚠️ 這次輸出可能不適合直接朗讀，建議人工複查：")
         if coffee_count > 1:
             print(f"   - 咖啡出現 {coffee_count} 次")
         if brand_count > 1:
             print(f"   - 品牌/技術詞出現 {brand_count} 次")
         if sales_hits:
             print(f"   - 出現推銷感詞語：{', '.join(sales_hits)}")
+        if narration_noise_hits:
+            print(f"   - 出現朗讀雜訊：{', '.join(narration_noise_hits)}")
 
 
 def extract_json(text):
@@ -58,7 +62,7 @@ def generate_story(raw_text, model="qwen2.5:7b"):
     prompt = f"""
 你現在是「咖啡時光廊」的沉浸式故事編輯，不是品牌行銷顧問。
 
-任務：把以下 YouTube 字幕整理成一篇真正像故事的作品。
+任務：把以下 YouTube 字幕整理成一篇真正像故事的散文短文。
 重點是人、處境、選擇、失去、等待、和解、盼望；不是推銷品牌，也不是推銷咖啡。
 
 寫作規則：
@@ -72,13 +76,16 @@ def generate_story(raw_text, model="qwen2.5:7b"):
 8. 經文要短，像句點，不要講道；可用「詩篇23篇」「馬太福音11:28」「約翰福音14:27」「傳道書3:11」這類方向。
 9. 適合 50～70 歲的人讀，文字要清楚、克制、真誠，不煽情。
 10. 不要捏造字幕中沒有的重大情節；可以重組敘事，但要忠於原始材料。
-11. 請嚴格輸出以下 JSON 格式，不要加任何 markdown 標記：
-12. 【極度重要】在 JSON 的字串值中，絕對不可使用半形雙引號 `"`！若需引號請一律使用全形 `「` 和 `」`！
-13. 【極度重要】所有換行都必須使用字串 `\\n`，絕對不可產生真實的換行符號！
+11. text 是要直接交給語音朗讀的故事文本。它必須像散文、小篇短文、文藝作品。
+12. text 裡禁止出現欄位標籤、章節標題、hashtags、項目符號、Markdown、包裝文案、FB/LINE 字樣。
+13. text 裡不要寫「【故事】」「【故事裡的光】」「#咖啡時光廊」這類會被朗讀出來的雜訊。
+14. 請嚴格輸出以下 JSON 格式，不要加任何 markdown 標記：
+15. 【極度重要】在 JSON 的字串值中，絕對不可使用半形雙引號 `"`！若需引號請一律使用全形 `「` 和 `」`！
+16. 【極度重要】所有換行都必須使用字串 `\\n`，絕對不可產生真實的換行符號！
 {{
     "title": "動人的標題(不超過15個字)",
     "excerpt": "像故事卡片的摘要(約30字，不要廣告語)",
-    "text": "【故事】\\n(約 500 字左右。沉浸式敘事，有人物、有場景、有轉折；不要置入行銷。)\\n\\n【故事裡的光】\\n(80-120字。只說這個故事留下的盼望或提醒，可自然對照一句短經文。)\\n\\n【包裝短句】\\n(一句像故事標籤的短語，不要推銷。)\\n\\n【背面祝福】\\n(一段安靜祝福，可附一節短聖經經文；不要講道。)\\n\\n【FB/LINE 分享文字】\\n(像朋友推薦一則故事，不像銷售文案；不要硬性呼籲購買。)\\n\\n【Hashtag】\\n#咖啡時光廊 #聽故事 #真實人生"
+    "text": "約 700 字左右，可直接朗讀的散文故事正文。只寫正文，不要任何標籤、章節名、hashtags、包裝文案或行銷欄位。"
 }}
 
 原始字幕：

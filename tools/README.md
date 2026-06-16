@@ -19,7 +19,7 @@ python3 menu.py
 
 ```text
 請選擇: 1
-今天的 hook，例如 一封信 / 回家 / 阿嬤 [一封信]: 回家
+今天的 hook，例如 一封信 / 回家 / 阿嬤 / 等待 [一封信]: 回家
 只要可用影片？ [Y/n]:
 只要故事型，排除歌曲/MV/劇集/vlog？ [Y/n]:
 需要有字幕/文字可抓？ [Y/n]:
@@ -105,7 +105,7 @@ python3 tools/search_youtube_topics.py --intent object --hook "老照片" --samp
 - `object`：家書、老照片、舊物、錄音
 - `family`：父親、母親、外公、外婆
 - `home`：回家、故鄉、離家
-- `care`：陪伴、照顧者、陪病
+- `care`：陪伴、等待、守候、在場、照顧者、陪病
 - `restart`：重新開始、中年、人生下半場
 - `dialect`：方言、台語、客語、潮汕話
 

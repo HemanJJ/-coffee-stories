@@ -21,10 +21,11 @@ from pathlib import Path
 from typing import Iterable
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
 
 
 YOUTUBE_API_BASE = "https://www.googleapis.com/youtube/v3"
+OLLAMA_URL = "http://127.0.0.1:11434/api/generate"
 DEFAULT_QUERY_FILE = Path(__file__).with_name("topic_queries.txt")
 DEFAULT_ENV_FILE = Path(__file__).resolve().parents[1] / ".env"
 VIDEO_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{11}$")
@@ -33,7 +34,7 @@ INTENT_QUERY_TERMS = {
     "object": ["家書", "老照片", "舊物", "錄音", "日記", "遺物"],
     "family": ["父親", "母親", "外公", "外婆", "家庭", "家人"],
     "home": ["回家", "故鄉", "離家", "返鄉"],
-    "care": ["陪伴", "照顧者", "陪病", "長照"],
+    "care": ["陪伴", "等待", "守候", "守望", "在場", "照顧者", "陪病", "長照"],
     "restart": ["重新開始", "中年", "轉職", "人生下半場"],
     "dialect": ["方言", "台語", "客語", "潮汕話", "家族記憶"],
 }
@@ -50,6 +51,10 @@ POSITIVE_TERMS = {
     "微紀錄片": 4,
     "調查報告": 3,
     "陪伴": 2,
+    "等待": 2,
+    "守候": 2,
+    "守望": 2,
+    "在場": 2,
     "回家": 2,
     "重新開始": 3,
     "重啟": 2,
@@ -413,11 +418,128 @@ def read_env_file(path: Path) -> dict[str, str]:
     return values
 
 
+def extract_json_object(text: str) -> str:
+    cleaned = (text or "").strip()
+    if cleaned.startswith("```json"):
+        cleaned = cleaned[7:]
+    if cleaned.startswith("```"):
+        cleaned = cleaned[3:]
+    if cleaned.endswith("```"):
+        cleaned = cleaned[:-3]
+    cleaned = cleaned.strip()
+
+    if cleaned.startswith("{") and cleaned.endswith("}"):
+        return cleaned
+
+    match = re.search(r"\{.*\}", cleaned, flags=re.S)
+    if match:
+        return match.group(0)
+
+    return cleaned
+
+
 def get_default_api_key() -> str:
     env_key = os.environ.get("YOUTUBE_API_KEY", "").strip()
     if env_key:
         return env_key
     return read_env_file(DEFAULT_ENV_FILE).get("YOUTUBE_API_KEY", "").strip()
+
+
+def get_default_ollama_model() -> str:
+    env_model = os.environ.get("OLLAMA_MODEL", "").strip()
+    if env_model:
+        return env_model
+    return read_env_file(DEFAULT_ENV_FILE).get("OLLAMA_MODEL", "qwen2.5:7b").strip()
+
+
+def ai_expand_hook_queries(hook: str, model: str, max_queries: int) -> list[str]:
+    hook = hook.strip()
+    if not hook:
+        return []
+
+    max_queries = max(1, min(max_queries, 10))
+    prompt = f"""
+你是「咖啡時光廊」的 YouTube 題材搜尋策略師。
+
+使用者今天給的 hook 是：「{hook}」。
+
+請不要只是把 hook 塞進搜尋框。你要先理解它背後的故事意圖，再產生適合 YouTube 搜尋的查詢詞。
+
+咖啡時光廊要找的是：
+- 小人物、小故事、真實人生
+- 家人、陪伴、等待、守候、回家、告別、老照片、舊物、書信、記憶
+- 訪談、口述故事、紀錄片、微紀錄片、生命故事
+- 有字幕或可整理成文字的內容
+
+請避免：
+- 歌曲、MV、歌詞、演唱、翻唱
+- 新聞、政治人物、宗教講道、靈異、測驗、娛樂名人、劇集片段、vlog
+- 太空泛的心靈雞湯詞
+
+請產生 {max_queries} 個繁體中文 YouTube 搜尋 query。
+每個 query 以 3 到 7 個詞為宜，要能直接拿去 YouTube 搜尋。
+query 要有變化：人物關係、故事形式、情境、物件或時間感都可以混合。
+
+只輸出 JSON，不要解釋：
+{{
+  "intent_note": "一句話說明你如何理解這個 hook",
+  "queries": ["查詢一", "查詢二"]
+}}
+"""
+
+    payload = json.dumps(
+        {
+            "model": model,
+            "prompt": prompt,
+            "stream": False,
+            "format": "json",
+            "options": {
+                "temperature": 0.55,
+                "num_ctx": 4096,
+                "num_predict": 900,
+            },
+        }
+    ).encode("utf-8")
+
+    try:
+        request = Request(
+            OLLAMA_URL,
+            data=payload,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urlopen(request, timeout=180) as response:
+            raw_response = json.loads(response.read().decode("utf-8"))
+    except Exception as exc:
+        print(f"AI hook expansion unavailable, falling back to static queries: {exc}")
+        return []
+
+    try:
+        data = json.loads(extract_json_object(raw_response.get("response", "")))
+    except json.JSONDecodeError as exc:
+        print(f"AI hook expansion returned invalid JSON, falling back: {exc}")
+        return []
+
+    queries: list[str] = []
+    seen: set[str] = set()
+    for raw_query in data.get("queries", []):
+        query = re.sub(r"\s+", " ", str(raw_query)).strip()
+        if not query or query in seen:
+            continue
+        queries.append(query)
+        seen.add(query)
+        if len(queries) >= max_queries:
+            break
+
+    if queries:
+        note = str(data.get("intent_note", "")).strip()
+        if note:
+            print(f"AI hook intent: {note}")
+        print("AI-generated YouTube queries:")
+        for query in queries:
+            print(f"- {query}")
+
+    return queries
 
 
 def parse_args() -> argparse.Namespace:
@@ -444,7 +566,23 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--hook",
         default="",
-        help="Today's hook phrase to append to every query, e.g. 老照片 or 一封信.",
+        help="Today's story direction hook, e.g. 老照片, 一封信, 等待.",
+    )
+    parser.add_argument(
+        "--ai-expand-hook",
+        action="store_true",
+        help="Use local Ollama to turn --hook into intent-aware YouTube queries.",
+    )
+    parser.add_argument(
+        "--ollama-model",
+        default=get_default_ollama_model(),
+        help="Local Ollama model for --ai-expand-hook. Default: OLLAMA_MODEL or qwen2.5:7b.",
+    )
+    parser.add_argument(
+        "--max-ai-queries",
+        type=int,
+        default=6,
+        help="Maximum AI-generated queries when --ai-expand-hook is enabled.",
     )
     parser.add_argument(
         "--intent",
@@ -543,6 +681,16 @@ def parse_args() -> argparse.Namespace:
 def read_queries(args: argparse.Namespace) -> list[str]:
     queries: list[str] = []
     seen: set[str] = set()
+
+    if args.hook and args.ai_expand_hook:
+        query_count = args.sample_queries or args.max_ai_queries
+        ai_queries = ai_expand_hook_queries(
+            args.hook,
+            args.ollama_model,
+            query_count,
+        )
+        if ai_queries:
+            return ai_queries
 
     for query in args.query:
         normalized = query.strip()
@@ -874,7 +1022,7 @@ def classify_source_type(title_blob: str, channel: str) -> str:
         return "institutional"
     if any(
         term in lowered
-        for term in ["回家", "陪伴", "父親", "母親", "外公", "家屬", "告別", "記憶", "人物故事", "生命故事"]
+        for term in ["回家", "陪伴", "等待", "守候", "守望", "在場", "父親", "母親", "外公", "家屬", "告別", "記憶", "人物故事", "生命故事"]
     ):
         return "story-fit"
     return "general"

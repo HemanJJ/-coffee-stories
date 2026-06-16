@@ -52,7 +52,7 @@ def infer_intent(hook: str) -> str:
         return "family"
     if any(term in hook for term in ["回家", "故鄉", "离家", "離家", "返鄉"]):
         return "home"
-    if any(term in hook for term in ["陪伴", "照顧", "照顾", "陪病", "長照"]):
+    if any(term in hook for term in ["陪伴", "等待", "守候", "守望", "在場", "照顧", "照顾", "陪病", "長照"]):
         return "care"
     if any(term in hook for term in ["重新", "中年", "轉職", "人生下半場"]):
         return "restart"
@@ -69,8 +69,8 @@ def build_yt_find_command(interactive: bool) -> list[str]:
     require_transcript = True
 
     if interactive:
-        print("\n先不要想太多，今天只選一個 hook，再用 Yes/No 開關過濾。")
-        hook = prompt_with_default("今天的 hook，例如 一封信 / 回家 / 阿嬤", hook)
+        print("\n先給一個方向 hook，AI 會先展開成幾組 YouTube 搜尋策略。")
+        hook = prompt_with_default("今天的 hook，例如 一封信 / 回家 / 阿嬤 / 等待", hook)
         strict_usable = ask_yes_no("只要可用影片？", strict_usable)
         story_only = ask_yes_no("只要故事型，排除歌曲/MV/劇集/vlog？", story_only)
         require_transcript = ask_yes_no("需要有字幕/文字可抓？", require_transcript)
@@ -82,6 +82,7 @@ def build_yt_find_command(interactive: bool) -> list[str]:
         infer_intent(hook),
         "--hook",
         hook,
+        "--ai-expand-hook",
         "--sample-queries",
         sample_queries,
         "--output",
