@@ -23,7 +23,8 @@ python3 menu.py story-make-single
 這個流程會把一支 YouTube 影片字幕，或一段你自己貼上的文字，交給本機 Ollama/Qwen 7B 轉成：
 
 - 咖啡故事文案
-- 封面圖片
+- 封面圖片佔位圖
+- 封面圖策略與生圖 prompt
 - 語音 MP3
 - `workflow/ai_stories.json`
 
@@ -122,6 +123,14 @@ END
 ```text
 assets/images/story_時間戳.jpg
 ```
+
+封面圖策略：
+
+```text
+workflow/cover_prompt.md
+```
+
+目前封面圖片仍是 Picsum 隨機佔位圖；`cover_prompt.md` 會提供搜尋關鍵字與未來生圖 prompt。
 
 語音：
 

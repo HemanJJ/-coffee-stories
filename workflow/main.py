@@ -7,6 +7,7 @@ from pathlib import Path
 from module_1_youtube import fetch_transcript
 from module_2_story import generate_story
 from module_2_dialogue import generate_dialogue
+from module_3_cover_prompt import generate_cover_prompt, write_cover_prompt
 from module_3_image import generate_image
 from module_4_voice import generate_dialogue_voice, generate_voice_with_fallback
 
@@ -147,16 +148,20 @@ async def main():
     image_path.parent.mkdir(parents=True, exist_ok=True)
     audio_path.parent.mkdir(parents=True, exist_ok=True)
 
-    # 3. 生圖
-    print("\n[3/5] 正在生成 2K 故事封面圖...")
+    # 3. 封面圖策略 + 佔位圖
+    print("\n[3/5] 正在準備故事封面圖...")
+    cover_data = generate_cover_prompt(title, excerpt, text, story_model)
     # 用 Pollinations.ai 替代 Imagen 3
     image_bytes = generate_image(title)
     if image_bytes:
         with image_path.open("wb") as f:
             f.write(image_bytes)
-        print("✅ 封面圖生成完畢")
+        print("✅ 封面佔位圖生成完畢")
     else:
         print("⚠️ 封面圖生成失敗，稍後請手動處理")
+    write_cover_prompt(WORKFLOW_DIR / "cover_prompt.md", cover_data, image_path)
+    if cover_data:
+        print("✅ 封面圖策略已寫入 workflow/cover_prompt.md")
 
     # 4. 配音
     print("\n[4/5] 正在準備配音...")
@@ -223,6 +228,7 @@ async def main():
         "mediaUrl": audio_url,
         "externalLink": url,
         "cover": image_url,
+        "coverPrompt": cover_data or {},
         "text": text,
         "type": "audio",
         "category": "愛", # 預設分類
