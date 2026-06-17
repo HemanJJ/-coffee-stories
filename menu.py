@@ -24,11 +24,23 @@ COMMANDS = {
         "command": [],
     },
     "2": {
-        "name": "story-make",
-        "title": "咖啡故事生成",
+        "name": "story-make-single",
+        "title": "單口說故事：正式上架用",
         "command": [
             workflow_python(),
             str(ROOT / "workflow" / "main.py"),
+            "--mode",
+            "single",
+        ],
+    },
+    "3": {
+        "name": "story-make-dialogue",
+        "title": "男女對話試聽：像 NotebookLM，用來聽題材",
+        "command": [
+            workflow_python(),
+            str(ROOT / "workflow" / "main.py"),
+            "--mode",
+            "dialogue",
         ],
     },
 }
@@ -89,6 +101,10 @@ def build_yt_find_command(interactive: bool) -> list[str]:
         "youtube_topic_candidates.csv",
         "--shortlist-output",
         "shortlist.csv",
+        "--plan-output",
+        "topic_plan.md",
+        "--report-output",
+        "topic_report.md",
     ]
     if not strict_usable:
         command.append("--allow-unusable")
@@ -125,11 +141,13 @@ def run_choice(choice: str, interactive: bool = False) -> int:
 def main() -> int:
     if len(sys.argv) > 1:
         requested = sys.argv[1]
+        if requested == "story-make":
+            requested = "story-make-single"
         for key, item in COMMANDS.items():
             if requested in {key, item["name"]}:
                 return run_choice(key, interactive=False)
         print(f"未知指令: {requested}")
-        print("可用指令: yt-find, story-make")
+        print("可用指令: yt-find, story-make-single, story-make-dialogue")
         return 1
 
     print_menu()

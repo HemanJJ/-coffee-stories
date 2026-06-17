@@ -452,10 +452,10 @@ def get_default_ollama_model() -> str:
     return read_env_file(DEFAULT_ENV_FILE).get("OLLAMA_MODEL", "qwen2.5:7b").strip()
 
 
-def ai_expand_hook_queries(hook: str, model: str, max_queries: int) -> list[str]:
+def ai_expand_hook_queries(hook: str, model: str, max_queries: int) -> tuple[list[str], str]:
     hook = hook.strip()
     if not hook:
-        return []
+        return [], ""
 
     max_queries = max(1, min(max_queries, 10))
     prompt = f"""
@@ -477,8 +477,28 @@ def ai_expand_hook_queries(hook: str, model: str, max_queries: int) -> list[str]
 - 太空泛的心靈雞湯詞
 
 請產生 {max_queries} 個繁體中文 YouTube 搜尋 query。
-每個 query 以 3 到 7 個詞為宜，要能直接拿去 YouTube 搜尋。
-query 要有變化：人物關係、故事形式、情境、物件或時間感都可以混合。
+
+重要：query 不是文案標題，不要寫成詩、散文或節目名稱。
+query 必須像真人會在 YouTube 搜尋框輸入的詞組。
+
+好的 query 範例：
+- 高溫 工作 紀錄片
+- 酷暑 獨居老人 訪談
+- 熱天 外送員 生活紀錄
+- 停電 夏天 家人 故事
+- 長照 陪伴 夏天 紀錄片
+- 中暑 家人 照顧 訪談
+
+壞的 query 範例：
+- 夏日炎炎守候家人
+- 老照片中的熱浪人生
+- 口述故事：熱死人的一天
+- 在酷暑中守護
+
+每個 query 以 3 到 6 個詞為宜。
+每個 query 至少包含一個「真實內容類型詞」：訪談、紀錄片、微紀錄片、生活紀錄、口述故事、真實故事。
+每個 query 至少包含一個「具體生活場景詞」：老人、外送員、工人、照顧者、家人、停電、長照、醫院、街友、獨居。
+不要使用冒號、句號、破折號或完整句子。
 
 只輸出 JSON，不要解釋：
 {{
@@ -512,18 +532,20 @@ query 要有變化：人物關係、故事形式、情境、物件或時間感�
             raw_response = json.loads(response.read().decode("utf-8"))
     except Exception as exc:
         print(f"AI hook expansion unavailable, falling back to static queries: {exc}")
-        return []
+        return [], ""
 
     try:
         data = json.loads(extract_json_object(raw_response.get("response", "")))
     except json.JSONDecodeError as exc:
         print(f"AI hook expansion returned invalid JSON, falling back: {exc}")
-        return []
+        return [], ""
 
     queries: list[str] = []
     seen: set[str] = set()
     for raw_query in data.get("queries", []):
         query = re.sub(r"\s+", " ", str(raw_query)).strip()
+        query = re.sub(r"[。．.!！?？:：;；,，、]+", " ", query)
+        query = re.sub(r"\s+", " ", query).strip()
         if not query or query in seen:
             continue
         queries.append(query)
@@ -539,7 +561,7 @@ query 要有變化：人物關係、故事形式、情境、物件或時間感�
         for query in queries:
             print(f"- {query}")
 
-    return queries
+    return queries, str(data.get("intent_note", "")).strip()
 
 
 def parse_args() -> argparse.Namespace:
@@ -643,6 +665,18 @@ def parse_args() -> argparse.Namespace:
         help="Shortlist CSV output path.",
     )
     parser.add_argument(
+        "--plan-output",
+        type=Path,
+        default=Path("topic_plan.md"),
+        help="Markdown output path for hook interpretation and search strategy.",
+    )
+    parser.add_argument(
+        "--report-output",
+        type=Path,
+        default=Path("topic_report.md"),
+        help="Markdown output path for today's topic selection report.",
+    )
+    parser.add_argument(
         "--shortlist-min-score",
         type=int,
         default=15,
@@ -679,18 +713,30 @@ def parse_args() -> argparse.Namespace:
 
 
 def read_queries(args: argparse.Namespace) -> list[str]:
+    queries, _ = read_queries_with_plan(args)
+    return queries
+
+
+def read_queries_with_plan(args: argparse.Namespace) -> tuple[list[str], dict[str, str]]:
     queries: list[str] = []
     seen: set[str] = set()
+    plan = {
+        "hook": args.hook.strip(),
+        "intent_note": "",
+        "query_source": "static",
+    }
 
     if args.hook and args.ai_expand_hook:
         query_count = args.sample_queries or args.max_ai_queries
-        ai_queries = ai_expand_hook_queries(
+        ai_queries, intent_note = ai_expand_hook_queries(
             args.hook,
             args.ollama_model,
             query_count,
         )
         if ai_queries:
-            return ai_queries
+            plan["intent_note"] = intent_note
+            plan["query_source"] = "ai"
+            return ai_queries, plan
 
     for query in args.query:
         normalized = query.strip()
@@ -723,7 +769,7 @@ def read_queries(args: argparse.Namespace) -> list[str]:
         sampler = random.Random(seed)
         queries = sampler.sample(queries, args.sample_queries)
 
-    return queries
+    return queries, plan
 
 
 def fetch_json(endpoint: str, params: dict[str, str | int]) -> dict:
@@ -1393,6 +1439,91 @@ def write_shortlist(path: Path, rows: list[TopicRow], min_score: int) -> tuple[i
     return len(shortlisted), used_fallback
 
 
+def write_topic_plan(path: Path, plan: dict[str, str], queries: list[str], args: argparse.Namespace) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    hook = plan.get("hook") or "(no hook)"
+    intent_note = plan.get("intent_note") or "未使用 AI 解讀，改用靜態 query。"
+    query_source = plan.get("query_source", "static")
+    lines = [
+        f"# 今日 Hook：{hook}",
+        "",
+        "## AI 對 Hook 的理解",
+        "",
+        intent_note,
+        "",
+        "## 搜尋策略",
+        "",
+        f"- query source: {query_source}",
+        f"- story only: {args.story_only}",
+        f"- require transcript: {args.require_transcript}",
+        f"- allow unusable: {args.allow_unusable}",
+        "",
+        "## YouTube 搜尋 Query",
+        "",
+    ]
+    lines.extend(f"- {query}" for query in queries)
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def write_topic_report(path: Path, rows: list[TopicRow], plan: dict[str, str], args: argparse.Namespace) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    hook = plan.get("hook") or "(no hook)"
+    lines = [
+        f"# 今日選題報告：{hook}",
+        "",
+        "## 結論",
+        "",
+    ]
+
+    if not rows:
+        lines.extend(
+            [
+                "這輪沒有找到符合條件的候選。",
+                "",
+                "## 建議下一步",
+                "",
+                "- 保留同一個 hook，但把「需要有字幕/文字可抓？」改成 `n` 再跑一次。",
+                "- 保留同一個 hook，但讓下一輪 query 更像 YouTube 搜尋詞，例如「高溫 工作 紀錄片」「酷暑 獨居老人 訪談」。",
+                "- 或把 hook 補成更具體的生活場景，例如「停電的夏天」「烈日下工作的人」「高溫裡的老人陪伴」。",
+                "- 如果仍然 0 筆，代表 YouTube 當下可用素材不足，不代表 hook 不好。",
+            ]
+        )
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        return
+
+    lines.extend(
+        [
+            f"找到 {len(rows)} 筆候選。先看前 3 筆，不要一次看完整 CSV。",
+            "",
+            "## 建議先看",
+            "",
+        ]
+    )
+    for row in rows[:3]:
+        lines.extend(
+            [
+                f"### {row.rank}. {row.title}",
+                "",
+                f"- 分數：{row.score}",
+                f"- 類型：{row.source_type}",
+                f"- 點閱 / 留言：{row.view_count} / {row.comment_count}",
+                f"- 可用性：{row.availability}",
+                f"- 字幕：{row.transcript_status}",
+                f"- URL：{row.url}",
+                f"- 為什麼：{row.score_reasons}",
+                "",
+            ]
+        )
+
+    risky = [row for row in rows if row.auto_suggestion == "排除"]
+    if risky:
+        lines.extend(["## 排除或小心", ""])
+        for row in risky[:5]:
+            lines.append(f"- {row.title}：{row.source_type}，{row.score_reasons}")
+
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
 def print_summary(rows: list[TopicRow], output: Path) -> None:
     print(f"Wrote {len(rows)} rows to {output}")
     for row in rows[:8]:
@@ -1416,9 +1547,10 @@ def main() -> int:
     args = parse_args()
     validate_api_key(args.api_key)
 
-    queries = read_queries(args)
+    queries, plan = read_queries_with_plan(args)
     if not queries:
         raise SystemExit("No queries found. Pass --query or create topic_queries.txt.")
+    write_topic_plan(args.plan_output, plan, queries, args)
 
     all_rows: list[TopicRow] = []
 
@@ -1450,9 +1582,10 @@ def main() -> int:
     sorted_rows = limit_rows_per_channel(sorted_rows, args.max_per_channel)
     sorted_rows = sort_rows(sorted_rows)
     if not sorted_rows:
+        write_topic_report(args.report_output, [], plan, args)
         print(
             "Wrote 0 rows. Existing CSV files were kept. "
-            "Try a broader hook, a different intent, or a larger --sample-queries."
+            f"Review {args.plan_output} and {args.report_output} for next steps."
         )
         return 0
 
@@ -1465,6 +1598,7 @@ def main() -> int:
     shortlist_count, used_fallback = write_shortlist(
         args.shortlist_output, sorted_rows, args.shortlist_min_score
     )
+    write_topic_report(args.report_output, sorted_rows, plan, args)
     print_summary(sorted_rows, args.output)
     if used_fallback:
         print(

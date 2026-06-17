@@ -35,7 +35,10 @@ python3 menu.py yt-find
 
 - `yt-find`：找 YouTube 題材，產出 `youtube_topic_candidates.csv`
 - `yt-find` 也會產出好找的短名 `shortlist.csv`
-- `story-make`：用本機 Ollama/Qwen 把 YouTube 字幕或文字轉成咖啡故事，產出 `workflow/ai_stories.json`
+- `yt-find` 也會產出 `topic_plan.md`，讓你看 AI 如何理解今天的 hook
+- `yt-find` 也會產出 `topic_report.md`，讓你看今天建議先看的候選
+- `story-make-single`：用本機 Ollama/Qwen 把 YouTube 字幕或文字轉成單口故事，正式上架用
+- `story-make-dialogue`：用本機 Ollama/Qwen 產生男女對話試聽，像 NotebookLM，用來聽題材
 
 這個工具是拿來幫你從 YouTube 找「比較像咖啡時光廊」的小人物故事題材。
 
@@ -151,6 +154,22 @@ shortlist.csv
 ```
 
 如果這輪沒有任何影片達到 shortlist 分數門檻，工具會把前 5 筆候選放進 `shortlist.csv` 當作「待人工看」清單。這代表它們不是好名單，只是避免檔案空白。
+
+### 3. `topic_plan.md`
+
+這是 AI 對今天 `hook` 的理解，以及它實際拿去 YouTube 搜尋的 query。
+
+如果你覺得「它根本沒懂我的 hook」，先看這個檔。
+
+### 4. `topic_report.md`
+
+這是今天的選題報告。
+
+它會告訴你：
+- 這輪找到幾筆
+- 前 3 筆先看哪幾支
+- 為什麼保留
+- 如果 0 筆，下一步要怎麼放寬
 
 ## 你現在最實用的看法
 

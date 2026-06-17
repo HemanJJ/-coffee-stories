@@ -11,13 +11,14 @@ python3 menu.py
 或直接指定 sub name：
 
 ```bash
-python3 menu.py story-make
+python3 menu.py story-make-single
 ```
 
-目前 menu 裡有兩個 sub name：
+目前 menu 裡有三個主要 sub name：
 
 - `yt-find`：找 YouTube 題材，產出 `youtube_topic_candidates.csv`
-- `story-make`：把 YouTube 字幕或文字轉成咖啡故事，產出 `workflow/ai_stories.json`
+- `story-make-single`：單口說故事，正式上架用，產出 `workflow/ai_stories.json`
+- `story-make-dialogue`：男女對話試聽，像 NotebookLM，用來內部聽題材，產出 `workflow/dialogue_preview.json`
 
 這個流程會把一支 YouTube 影片字幕，或一段你自己貼上的文字，交給本機 Ollama/Qwen 7B 轉成：
 
@@ -87,7 +88,13 @@ source workflow/venv/bin/activate
 執行主流程：
 
 ```bash
-python3 workflow/main.py
+python3 workflow/main.py --mode single
+```
+
+如果要產生男女對話試聽：
+
+```bash
+python3 workflow/main.py --mode dialogue
 ```
 
 程式會問你：
@@ -98,7 +105,15 @@ python3 workflow/main.py
 
 你可以貼 YouTube 網址。
 
-如果影片沒有字幕，會抓不到字幕。這時可以直接按 Enter，改貼一段文字讓它生成故事。
+如果影片沒有字幕，程式會請你貼上替代文字，例如影片描述、留言、你自己的筆記，或你看完後的摘要。
+
+貼完後另起一行輸入：
+
+```text
+END
+```
+
+程式就會繼續生成故事。
 
 ## 跑完會產出什麼
 
@@ -118,6 +133,13 @@ CMS 匯入檔：
 
 ```text
 workflow/ai_stories.json
+```
+
+男女對話試聽檔：
+
+```text
+workflow/dialogue_preview.json
+assets/audio/dialogue_時間戳/
 ```
 
 ## 常見問題
@@ -151,7 +173,14 @@ OLLAMA_MODEL="你的模型名稱"
 
 代表該 YouTube 影片沒有可用字幕，或字幕語言不支援。
 
-可以改用手動貼文字。
+現在不會直接中斷。你可以貼：
+
+- 影片描述
+- 觀眾留言
+- 你自己的觀看筆記
+- 影片大意摘要
+
+貼完輸入 `END`，仍然可以生成故事。
 
 ### 圖片很隨機
 
