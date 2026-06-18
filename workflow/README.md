@@ -130,7 +130,11 @@ assets/images/story_時間戳.jpg
 workflow/cover_prompt.md
 ```
 
-目前封面圖片仍是 Picsum 隨機佔位圖；`cover_prompt.md` 會提供搜尋關鍵字與未來生圖 prompt。
+目前封面圖片會優先用 `cover_prompt.md` 的關鍵字到 Wikimedia Commons 找相關可用圖；找不到才退回 Picsum 隨機佔位圖。
+
+`cover_prompt.md` 也會記錄圖片來源、授權、搜尋詞，並提供未來生圖 prompt。
+
+如果要貼到 Banana / Nano Banana，優先複製 `中文生圖 Prompt`；英文 prompt 只是備用。
 
 語音：
 

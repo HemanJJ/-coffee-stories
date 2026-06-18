@@ -151,14 +151,19 @@ async def main():
     # 3. 封面圖策略 + 佔位圖
     print("\n[3/5] 正在準備故事封面圖...")
     cover_data = generate_cover_prompt(title, excerpt, text, story_model)
-    # 用 Pollinations.ai 替代 Imagen 3
-    image_bytes = generate_image(title)
-    if image_bytes:
+    image_result = generate_image(
+        title,
+        (cover_data or {}).get("image_search_keywords", []),
+    )
+    image_source = (image_result or {}).get("source", {})
+    if image_result and image_result.get("content"):
         with image_path.open("wb") as f:
-            f.write(image_bytes)
-        print("✅ 封面佔位圖生成完畢")
+            f.write(image_result["content"])
+        print("✅ 封面圖取得完畢")
     else:
         print("⚠️ 封面圖生成失敗，稍後請手動處理")
+    if cover_data is not None:
+        cover_data["image_source"] = image_source
     write_cover_prompt(WORKFLOW_DIR / "cover_prompt.md", cover_data, image_path)
     if cover_data:
         print("✅ 封面圖策略已寫入 workflow/cover_prompt.md")
@@ -229,6 +234,7 @@ async def main():
         "externalLink": url,
         "cover": image_url,
         "coverPrompt": cover_data or {},
+        "imageSource": image_source,
         "text": text,
         "type": "audio",
         "category": "愛", # 預設分類

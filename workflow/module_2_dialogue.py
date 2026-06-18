@@ -35,6 +35,16 @@ def trim_source_text(raw_text):
     return text[:MAX_SOURCE_CHARS] + "\n\n[文字過長，後段已省略，請根據前段材料整理對話。]"
 
 
+def warn_if_simplified_chinese(data):
+    simplified_markers = ["这", "个", "为", "后", "里", "听", "说", "过", "对", "会", "与", "岁", "时", "亲"]
+    text_parts = [data.get("title", ""), data.get("excerpt", "")]
+    text_parts.extend(turn.get("text", "") for turn in data.get("turns", []))
+    joined = " ".join(text_parts)
+    hits = sorted({char for char in simplified_markers if char in joined})
+    if hits:
+        print(f"⚠️ 對話稿可能混入簡體字，建議人工複查：{''.join(hits[:12])}")
+
+
 def generate_dialogue(raw_text, model="qwen2.5:7b"):
     source_text = trim_source_text(raw_text)
     prompt = f"""
@@ -50,6 +60,8 @@ def generate_dialogue(raw_text, model="qwen2.5:7b"):
 - 不要 hashtags、欄位標籤、Markdown。
 - 每段 1 到 3 句，適合 TTS 分段朗讀。
 - 共 8 到 12 段。
+- title、excerpt、turns 裡所有 text 一律使用繁體中文。不要輸出簡體中文、英文標題或中英混雜。
+- 若原始素材是簡體中文，請自然轉寫為台灣讀者聽得懂的繁體中文。
 
 只輸出 JSON，不要解釋：
 {{
@@ -83,7 +95,9 @@ def generate_dialogue(raw_text, model="qwen2.5:7b"):
         )
         response.raise_for_status()
         text = response.json().get("response", "")
-        return json.loads(extract_json(text))
+        data = json.loads(extract_json(text))
+        warn_if_simplified_chinese(data)
+        return data
     except Exception as e:
         print(f"❌ Ollama 對話生成失敗: {e}")
         return None

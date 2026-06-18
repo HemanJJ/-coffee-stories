@@ -44,8 +44,8 @@ def generate_cover_prompt(title, excerpt, story_text, model="qwen2.5:7b"):
 {{
   "cover_mood": "一句話描述封面氣質",
   "image_search_keywords": ["搜尋詞1", "搜尋詞2", "搜尋詞3"],
-  "image_prompt_zh": "繁體中文生圖提示詞",
-  "image_prompt_en": "英文生圖提示詞",
+  "image_prompt_zh": "可直接貼到生圖工具的繁體中文提示詞，具體描述主體、光線、構圖、風格、情緒",
+  "image_prompt_en": "英文備用提示詞",
   "avoid_words": ["不要出現的元素"]
 }}
 
@@ -89,7 +89,16 @@ def write_cover_prompt(path, cover_data, image_path):
         "",
         f"目前實際圖片：{image_path}",
         "",
-        "目前圖片仍是 Picsum 隨機佔位圖；以下內容供手動找圖或未來串接生圖服務使用。",
+        "目前流程會優先找 Wikimedia Commons 相關圖片；找不到才使用 Picsum 隨機佔位圖。",
+        "",
+        "## 目前圖片來源",
+        "",
+        f"- source: {cover_data.get('image_source', {}).get('source', '')}",
+        f"- title: {cover_data.get('image_source', {}).get('title', '')}",
+        f"- url: {cover_data.get('image_source', {}).get('url', '')}",
+        f"- page: {cover_data.get('image_source', {}).get('page', '')}",
+        f"- license: {cover_data.get('image_source', {}).get('license', '')}",
+        f"- query: {cover_data.get('image_source', {}).get('query', '')}",
         "",
         "## 封面氣質",
         "",
@@ -106,7 +115,7 @@ def write_cover_prompt(path, cover_data, image_path):
             "",
             cover_data.get("image_prompt_zh", ""),
             "",
-            "## English Image Prompt",
+            "## English Image Prompt（備用）",
             "",
             cover_data.get("image_prompt_en", ""),
             "",

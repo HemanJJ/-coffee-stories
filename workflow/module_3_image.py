@@ -1,23 +1,104 @@
-import urllib.parse
 import requests
 
-def generate_image(prompt):
+
+COMMONS_API_URL = "https://commons.wikimedia.org/w/api.php"
+PICSUM_URL = "https://picsum.photos/1536/1920"
+HEADERS = {
+    "User-Agent": "coffee-stories/0.1 (local story cover research; https://hemanjj.github.io/-coffee-stories/)"
+}
+
+
+def search_commons_image(search_terms):
+    for term in search_terms:
+        query = str(term).strip()
+        if not query:
+            continue
+
+        try:
+            response = requests.get(
+                COMMONS_API_URL,
+                params={
+                    "action": "query",
+                    "format": "json",
+                    "generator": "search",
+                    "gsrnamespace": 6,
+                    "gsrsearch": query,
+                    "gsrlimit": 8,
+                    "prop": "imageinfo",
+                    "iiprop": "url|mime|extmetadata",
+                },
+                headers=HEADERS,
+                timeout=20,
+            )
+            response.raise_for_status()
+        except Exception as exc:
+            print(f"⚠️ Wikimedia 搜圖失敗 ({query}): {exc}")
+            continue
+
+        pages = response.json().get("query", {}).get("pages", {})
+        for page in pages.values():
+            imageinfo = page.get("imageinfo", [])
+            if not imageinfo:
+                continue
+            info = imageinfo[0]
+            mime = info.get("mime", "")
+            image_url = info.get("url", "")
+            if mime not in {"image/jpeg", "image/png"} or not image_url:
+                continue
+
+            metadata = info.get("extmetadata", {})
+            return {
+                "url": image_url,
+                "page": f"https://commons.wikimedia.org/wiki/{page.get('title', '').replace(' ', '_')}",
+                "title": page.get("title", ""),
+                "license": metadata.get("LicenseShortName", {}).get("value", ""),
+                "artist": metadata.get("Artist", {}).get("value", ""),
+                "source": "Wikimedia Commons",
+                "query": query,
+            }
+
+    return None
+
+
+def download_image(image_url):
+    response = requests.get(image_url, allow_redirects=True, headers=HEADERS, timeout=30)
+    response.raise_for_status()
+    return response.content
+
+
+def generate_image(prompt, search_terms=None):
     """
-    因為 Pollinations 現在開始收費 (402 Error)，
-    我們暫時改用 Picsum 產生隨機的高畫質圖片作為佔位符。
-    未來您可以手動替換成自己喜歡的圖片，或接回付費的生圖服務。
+    Prefer a related, reusable Wikimedia Commons image. If none is found,
+    fall back to a Picsum random placeholder so the story pipeline continues.
     """
-    # 2K 高畫質、微長方形 (適合 10x12) -> 1536x1920
-    url = "https://picsum.photos/1536/1920"
-    
+    terms = list(search_terms or [])
+    if prompt:
+        terms.append(prompt)
+
+    commons_match = search_commons_image(terms)
+    if commons_match:
+        try:
+            print(f"✅ 找到相關 Wikimedia 圖片：{commons_match['title']}")
+            return {
+                "content": download_image(commons_match["url"]),
+                "source": commons_match,
+            }
+        except Exception as exc:
+            print(f"⚠️ Wikimedia 圖片下載失敗，改用 Picsum：{exc}")
+
     try:
-        # allow_redirects=True 是必要的，因為 Picsum 會 302 重新導向
-        response = requests.get(url, allow_redirects=True)
-        if response.status_code == 200:
-            return response.content
-        else:
-            print(f"❌ 圖片生成失敗: HTTP {response.status_code}")
-            return None
-    except Exception as e:
-        print(f"❌ 圖片生成發生錯誤: {e}")
+        print("⚠️ 找不到合適 Wikimedia 圖片，改用 Picsum 隨機佔位圖。")
+        return {
+            "content": download_image(PICSUM_URL),
+            "source": {
+                "source": "Picsum placeholder",
+                "url": PICSUM_URL,
+                "title": "Random placeholder image",
+                "license": "",
+                "artist": "",
+                "query": "",
+            },
+        }
+    except Exception as exc:
+        print(f"❌ 圖片取得失敗: {exc}")
         return None

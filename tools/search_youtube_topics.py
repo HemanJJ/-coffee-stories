@@ -217,6 +217,17 @@ NEGATIVE_TERMS = {
     "原创歌曲": -6,
     "原創歌曲": -6,
     "vlog": -5,
+    "釣魚": -8,
+    "釣查": -8,
+    "飛釣": -8,
+    "小物釣": -8,
+    "flyfishing": -8,
+    "fishing": -8,
+    "生態釣查": -8,
+    "原生魚": -7,
+    "該怎麼辦": -5,
+    "跟蹤": -6,
+    "生活技巧": -5,
     "服貿": -6,
     "柯文哲": -6,
     "賴清德": -6,
@@ -307,6 +318,10 @@ NEGATIVE_CHANNEL_TERMS = {
     "法師": -7,
     "法师": -7,
     "寺": -4,
+    "亮生活": -8,
+    "bright side": -8,
+    "玩飛釣": -8,
+    "釣": -6,
 }
 
 PRIVATE_MEMORIAL_TERMS = [
@@ -348,6 +363,17 @@ MEDIA_NOISE_TERMS = [
     "翻唱",
     "cover",
     "vlog",
+    "釣魚",
+    "釣查",
+    "飛釣",
+    "小物釣",
+    "flyfishing",
+    "fishing",
+    "生態釣查",
+    "原生魚",
+    "該怎麼辦",
+    "跟蹤",
+    "生活技巧",
 ]
 
 ENTERTAINMENT_TERMS = [
@@ -498,6 +524,8 @@ query 必須像真人會在 YouTube 搜尋框輸入的詞組。
 每個 query 以 3 到 6 個詞為宜。
 每個 query 至少包含一個「真實內容類型詞」：訪談、紀錄片、微紀錄片、生活紀錄、口述故事、真實故事。
 每個 query 至少包含一個「具體生活場景詞」：老人、外送員、工人、照顧者、家人、停電、長照、醫院、街友、獨居。
+如果 hook 是「陪伴」，每個 query 還必須包含至少一個關係核心詞：陪伴、照顧、守候、陪病、長照、家人陪伴、照顧者。
+不要只用「回家」「故事」「訪談」這種泛詞代表陪伴。
 不要使用冒號、句號、破折號或完整句子。
 
 只輸出 JSON，不要解釋：
@@ -1429,11 +1457,20 @@ def write_csv(path: Path, rows: list[TopicRow]) -> None:
             )
 
 
+def is_shortlist_candidate(row: TopicRow) -> bool:
+    if row.auto_suggestion == "排除":
+        return False
+    if row.source_type in {"media-noise", "news-risk", "politics", "religion", "entertainment", "brand", "music-fragment"}:
+        return False
+    return True
+
+
 def write_shortlist(path: Path, rows: list[TopicRow], min_score: int) -> tuple[int, bool]:
-    shortlisted = [row for row in rows if row.score >= min_score]
+    clean_rows = [row for row in rows if is_shortlist_candidate(row)]
+    shortlisted = [row for row in clean_rows if row.score >= min_score]
     used_fallback = False
-    if not shortlisted and rows:
-        shortlisted = rows[: min(5, len(rows))]
+    if not shortlisted and clean_rows:
+        shortlisted = clean_rows[: min(5, len(clean_rows))]
         used_fallback = True
     write_csv(path, shortlisted)
     return len(shortlisted), used_fallback
