@@ -904,8 +904,15 @@
 
         <!-- Cover -->
         <div class="form-group">
-          <label for="editCover">封面圖片 URL</label>
+          <label for="editCover" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <span>封面圖片 URL</span>
+            <div style="position: relative; display: inline-block;">
+              <button type="button" class="btn" style="padding: 4px 10px; font-size: 13px; background-color: var(--secondary-bg); color: var(--text-light); border: 1px solid var(--border-color); border-radius: 6px; cursor: pointer;">📎 從電腦上傳圖片</button>
+              <input type="file" id="localImageUpload" accept="image/*" onchange="handleLocalImageUpload(this)" style="position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;">
+            </div>
+          </label>
           <input type="text" id="editCover" placeholder="https://..." oninput="previewCover(this.value)">
+          <div id="uploadStatus" style="font-size: 13px; color: var(--primary-color); display: none; margin-top: 6px; font-weight: bold;">⏳ 圖片上傳中，請稍候...</div>
           <img class="cover-preview" id="coverPreview" alt="封面預覽">
         </div>
 
@@ -1525,6 +1532,49 @@
         if (deleteDialog.open) deleteDialog.close();
       }
     });
+    /* Local Image Upload Handler */
+    function handleLocalImageUpload(input) {
+      if (!input.files || input.files.length === 0) return;
+      
+      var file = input.files[0];
+      var reader = new FileReader();
+      var uploadStatus = document.getElementById('uploadStatus');
+      
+      // 顯示上傳中
+      uploadStatus.style.display = 'block';
+      input.disabled = true;
+      
+      reader.onload = function(e) {
+        var base64Data = e.target.result;
+        
+        // 呼叫後端 Google Apps Script 函數
+        google.script.run
+          .withSuccessHandler(function(res) {
+            uploadStatus.style.display = 'none';
+            input.disabled = false;
+            input.value = ''; // 允許重新選擇相同檔案
+            
+            if (res.success) {
+              var coverInput = document.getElementById('editCover');
+              coverInput.value = res.url;
+              previewCover(res.url);
+              showToast('圖片上傳成功！', 'success');
+            } else {
+              showToast('上傳失敗：' + res.error, 'error');
+            }
+          })
+          .withFailureHandler(function(err) {
+            uploadStatus.style.display = 'none';
+            input.disabled = false;
+            input.value = '';
+            showToast('上傳發生不可預期的錯誤', 'error');
+            console.error(err);
+          })
+          .uploadImageToDrive(base64Data, file.name);
+      };
+      
+      reader.readAsDataURL(file);
+    }
   </script>
 </body>
 </html>
