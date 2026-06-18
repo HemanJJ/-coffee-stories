@@ -1295,11 +1295,12 @@
     </footer>
 
     <script>
-        // ==================== 1. Google 試算表設定 (關鍵！) ====================
-        // 請在此處填入您的 Google 試算表 ID。
-        // 例如：https://docs.google.com/spreadsheets/d/12345abcdefg/edit 中的 '12345abcdefg'
-        // 注意：試算表必須設定為「知道連結的人均可檢視」，並且在選單點選「檔案 ➔ 共用 ➔ 發布到網路」！
+        // ==================== 設定區 ====================
+        // 請在此填入您的 Google Sheet ID
         const GOOGLE_SHEET_ID = '1VA-CCU0rFKEHFoSuczcwZFnhOYLP379gDny_nEdXIfo';
+        
+        // 請在此填入您的 Google Apps Script Web App 網址 (用於音檔中繼)
+        const WEB_APP_URL = '請貼上您的 Google Apps Script Web App 網址';
 
         // CMS v1：故事全部來自 Google Sheet，不再使用本地預設資料
         // 如果 Google Sheet 無法連線或為空，前台會顯示空狀態引導訊息
@@ -1511,7 +1512,7 @@
         // ==================== 故事彈窗邏輯 ====================
         const dialog = document.getElementById('storyDialog');
 
-        function openStoryDialog(id) {
+        async function openStoryDialog(id) {
             const story = storyDatabase[id];
             if (!story) return;
             
@@ -1550,19 +1551,23 @@
                 }
             } else if (story.type === 'audio') {
                 if (isDriveMedia && driveId) {
+                    // 使用淺色原生播放器，但隱藏，等待 Base64 抓取
                     mediaHtml = `
                         <div class="dialog-audio-wrapper">
                             <img class="audio-cover" src="${story.cover}" alt="${story.title}">
-                            <div style="width: 100%; height: 120px; border-radius: 12px; overflow: hidden; margin-top: -20px; position: relative; z-index: 2; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
-                                <iframe src="https://drive.google.com/file/d/${driveId}/preview" style="width: 100%; height: 100%; border: none;" allow="autoplay"></iframe>
+                            <div id="audioLoadingIndicator" style="text-align: center; color: var(--text-secondary); margin-bottom: 10px; font-size: 0.95rem;">
+                                ⏳ 正在安全讀取高音質原音，請稍候...
                             </div>
+                            <audio class="dialog-audio" id="dialogAudio" controls style="display: none; width: 100%;">
+                                您的瀏覽器不支援音訊播放。
+                            </audio>
                         </div>
                     `;
                 } else {
                     mediaHtml = `
                         <div class="dialog-audio-wrapper">
                             <img class="audio-cover" src="${story.cover}" alt="${story.title}">
-                            <audio class="dialog-audio" id="dialogAudio" src="${story.mediaUrl}" controls>
+                            <audio class="dialog-audio" id="dialogAudio" src="${story.mediaUrl}" controls style="width: 100%;">
                                 您的瀏覽器不支援音訊播放。
                             </audio>
                         </div>
@@ -1595,6 +1600,39 @@
                 <div class="dialog-text">${story.text}</div>
                 ${externalLinkHtml}
             `;
+            
+            // 執行 AJAX 抓取 Base64 音檔 (如果是 Drive 音檔)
+            if (story.type === 'audio' && isDriveMedia && driveId) {
+                if (!WEB_APP_URL || WEB_APP_URL.includes('請貼上您的 Google Apps Script Web App 網址')) {
+                    document.getElementById('audioLoadingIndicator').innerHTML = '⚠️ 錯誤：您必須在 index.html 設定 WEB_APP_URL 才能播放雲端音檔。';
+                } else {
+                    try {
+                        const response = await fetch(`${WEB_APP_URL}?action=getMediaBase64&id=${driveId}`);
+                        const result = await response.json();
+                        if (result.success && result.base64) {
+                            // 將 Base64 還原為 Blob
+                            const binaryString = atob(result.base64);
+                            const len = binaryString.length;
+                            const bytes = new Uint8Array(len);
+                            for (let i = 0; i < len; i++) {
+                                bytes[i] = binaryString.charCodeAt(i);
+                            }
+                            const blob = new Blob([bytes], { type: result.mimeType || 'audio/mpeg' });
+                            const blobUrl = URL.createObjectURL(blob);
+                            
+                            const audioEl = document.getElementById('dialogAudio');
+                            audioEl.src = blobUrl;
+                            audioEl.style.display = 'block';
+                            document.getElementById('audioLoadingIndicator').style.display = 'none';
+                        } else {
+                            document.getElementById('audioLoadingIndicator').innerHTML = '⚠️ 音檔讀取失敗：' + (result.error || '未知錯誤');
+                        }
+                    } catch (err) {
+                        document.getElementById('audioLoadingIndicator').innerHTML = '⚠️ 網路連線錯誤，無法讀取音檔。請確認 Web App 已開啟任何人皆可存取。';
+                        console.error(err);
+                    }
+                }
+            }
 
             // 修改網址列 Hash 便於分享或 QR Code 路由
             window.location.hash = `story-${id}`;
