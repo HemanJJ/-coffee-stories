@@ -325,3 +325,55 @@ function getNextId_() {
   
   return maxId + 1;
 }
+
+// ==================== 檔案上傳 ====================
+
+/**
+ * 將 Base64 圖片上傳至 Google Drive 並回傳直連網址
+ * @param {string} base64Data - Base64 編碼的圖片資料
+ * @param {string} fileName - 檔案名稱
+ * @returns {Object} { success: boolean, url: string, error: string }
+ */
+function uploadImageToDrive(base64Data, fileName) {
+  try {
+    // 1. 尋找或建立存放資料夾
+    const folderName = 'CoffeeStories_Images';
+    let folder;
+    const folders = DriveApp.getFoldersByName(folderName);
+    if (folders.hasNext()) {
+      folder = folders.next();
+    } else {
+      folder = DriveApp.createFolder(folderName);
+      // 將資料夾設為公開檢視，避免部分圖片載入問題
+      folder.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    }
+    
+    // 2. 處理 Base64 字串
+    const parts = base64Data.split(',');
+    let mimeType = 'image/jpeg';
+    let dataStr = base64Data;
+    
+    if (parts.length > 1) {
+      const match = parts[0].match(/:(.*?);/);
+      if (match) mimeType = match[1];
+      dataStr = parts[1];
+    }
+    
+    // 3. 轉碼並建立檔案
+    const decoded = Utilities.base64Decode(dataStr);
+    const blob = Utilities.newBlob(decoded, mimeType, fileName);
+    const file = folder.createFile(blob);
+    
+    // 4. 設定檔案權限為「知道連結的人皆可檢視」
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    
+    // 5. 取得直連網址 (使用 thumbnail API 以確保網頁端可正常嵌入)
+    const url = "https://drive.google.com/thumbnail?sz=w1200&id=" + file.getId();
+    
+    return { success: true, url: url };
+    
+  } catch (err) {
+    Logger.log(err.toString());
+    return { success: false, error: err.toString() };
+  }
+}

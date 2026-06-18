@@ -693,6 +693,12 @@ def parse_args() -> argparse.Namespace:
         help="Shortlist CSV output path.",
     )
     parser.add_argument(
+        "--shortlist-md-output",
+        type=Path,
+        default=Path("shortlist.md"),
+        help="Clickable Markdown shortlist output path.",
+    )
+    parser.add_argument(
         "--plan-output",
         type=Path,
         default=Path("topic_plan.md"),
@@ -1465,15 +1471,70 @@ def is_shortlist_candidate(row: TopicRow) -> bool:
     return True
 
 
-def write_shortlist(path: Path, rows: list[TopicRow], min_score: int) -> tuple[int, bool]:
+def select_shortlist_rows(rows: list[TopicRow], min_score: int) -> tuple[list[TopicRow], bool]:
     clean_rows = [row for row in rows if is_shortlist_candidate(row)]
     shortlisted = [row for row in clean_rows if row.score >= min_score]
     used_fallback = False
     if not shortlisted and clean_rows:
         shortlisted = clean_rows[: min(5, len(clean_rows))]
         used_fallback = True
+    return shortlisted, used_fallback
+
+
+def write_shortlist(path: Path, rows: list[TopicRow], min_score: int) -> tuple[int, bool, list[TopicRow]]:
+    shortlisted, used_fallback = select_shortlist_rows(rows, min_score)
     write_csv(path, shortlisted)
-    return len(shortlisted), used_fallback
+    return len(shortlisted), used_fallback, shortlisted
+
+
+def write_shortlist_md(path: Path, rows: list[TopicRow], plan: dict[str, str], used_fallback: bool) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    hook = plan.get("hook") or "(no hook)"
+    lines = [
+        f"# Shortlist：{hook}",
+        "",
+    ]
+
+    if not rows:
+        lines.extend(
+            [
+                "這輪沒有乾淨的 shortlist。",
+                "",
+                "可以回到 `python3 menu.py` 再跑一次，或把 hook 改得更具體。",
+            ]
+        )
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        return
+
+    if used_fallback:
+        lines.extend(
+            [
+                "沒有影片達到正式 shortlist 分數門檻，下面是乾淨候選裡最值得人工看看的前幾筆。",
+                "",
+            ]
+        )
+    else:
+        lines.extend(["下面是這輪最值得先看的影片。標題可直接點開 YouTube。", ""])
+
+    for index, row in enumerate(rows, start=1):
+        lines.extend(
+            [
+                f"## {index}. [{row.title}]({row.url})",
+                "",
+                f"- 分數：{row.score}",
+                f"- 點閱 / 留言：{row.view_count} / {row.comment_count}",
+                f"- 類型：{row.source_type}",
+                f"- 可用性：{row.availability}",
+                f"- 字幕：{row.transcript_status}",
+                f"- 頻道：{row.channel}",
+                f"- 為什麼：{row.score_reasons}",
+                "",
+            ]
+        )
+        if row.top_comment_excerpt:
+            lines.extend([f"> {row.top_comment_excerpt}", ""])
+
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
 def write_topic_plan(path: Path, plan: dict[str, str], queries: list[str], args: argparse.Namespace) -> None:
@@ -1632,9 +1693,10 @@ def main() -> int:
         row.top_comment_excerpt = fetch_top_comment_excerpt(args.api_key, row.video_id)
         time.sleep(max(args.sleep, 0))
     write_csv(args.output, sorted_rows)
-    shortlist_count, used_fallback = write_shortlist(
+    shortlist_count, used_fallback, shortlisted_rows = write_shortlist(
         args.shortlist_output, sorted_rows, args.shortlist_min_score
     )
+    write_shortlist_md(args.shortlist_md_output, shortlisted_rows, plan, used_fallback)
     write_topic_report(args.report_output, sorted_rows, plan, args)
     print_summary(sorted_rows, args.output)
     if used_fallback:
@@ -1647,6 +1709,7 @@ def main() -> int:
             f"Shortlist ({args.shortlist_min_score}+) written to "
             f"{args.shortlist_output}"
         )
+    print(f"Clickable shortlist written to {args.shortlist_md_output}")
     return 0
 
 
