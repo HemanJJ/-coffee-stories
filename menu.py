@@ -43,6 +43,14 @@ COMMANDS = {
             "dialogue",
         ],
     },
+    "4": {
+        "name": "text-to-voice",
+        "title": "現成文案轉 MP3",
+        "command": [
+            workflow_python(),
+            str(ROOT / "workflow" / "text_to_voice.py"),
+        ],
+    },
 }
 
 
@@ -147,7 +155,7 @@ def main() -> int:
             if requested in {key, item["name"]}:
                 return run_choice(key, interactive=False)
         print(f"未知指令: {requested}")
-        print("可用指令: yt-find, story-make-single, story-make-dialogue")
+        print("可用指令: yt-find, story-make-single, story-make-dialogue, text-to-voice")
         return 1
 
     print_menu()
