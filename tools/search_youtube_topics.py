@@ -377,6 +377,13 @@ MEDIA_NOISE_TERMS = [
 ]
 
 ENTERTAINMENT_TERMS = [
+    "搞笑",
+    "喜劇",
+    "喜剧",
+    "惡搞",
+    "恶搞",
+    "迷因",
+    "meme",
     "藝人",
     "艺人",
     "明星",
@@ -492,10 +499,10 @@ def ai_expand_hook_queries(hook: str, model: str, max_queries: int) -> tuple[lis
 請不要只是把 hook 塞進搜尋框。你要先理解它背後的故事意圖，再產生適合 YouTube 搜尋的查詢詞。
 
 咖啡時光廊要找的是：
-- 小人物、小故事、真實人生
-- 家人、陪伴、等待、守候、回家、告別、老照片、舊物、書信、記憶
-- 訪談、口述故事、紀錄片、微紀錄片、生命故事
-- 有字幕或可整理成文字的內容
+- 真實人物的生命見證、信仰故事、生命翻轉的親身經歷
+- 關係修復、家人陪伴、和解、饒恕、恩典、等待與盼望
+- 個人訪談、口述見證、微紀錄片、生命故事
+- 有真實情感交流、有字幕或可整理成文字的內容
 
 請避免：
 - 歌曲、MV、歌詞、演唱、翻唱
@@ -508,24 +515,24 @@ def ai_expand_hook_queries(hook: str, model: str, max_queries: int) -> tuple[lis
 query 必須像真人會在 YouTube 搜尋框輸入的詞組。
 
 好的 query 範例：
-- 高溫 工作 紀錄片
-- 酷暑 獨居老人 訪談
-- 熱天 外送員 生活紀錄
-- 停電 夏天 家人 故事
-- 長照 陪伴 夏天 紀錄片
-- 中暑 家人 照顧 訪談
+- 家人 和解 見證
+- 浪子回頭 真實故事
+- 憂鬱症 陪伴 生命見證
+- 婚姻 危機 饒恕 訪談
+- 長照 恩典 口述故事
+- 親子 衝突 關係修復 見證
 
 壞的 query 範例：
-- 夏日炎炎守候家人
-- 老照片中的熱浪人生
-- 口述故事：熱死人的一天
-- 在酷暑中守護
+- 端午節的由來與歷史
+- 香港集體回憶老照片
+- 宗教講道：如何饒恕
+- 愛與陪伴的散文
 
-每個 query 以 3 到 6 個詞為宜。
-每個 query 至少包含一個「真實內容類型詞」：訪談、紀錄片、微紀錄片、生活紀錄、口述故事、真實故事。
-每個 query 至少包含一個「具體生活場景詞」：老人、外送員、工人、照顧者、家人、停電、長照、醫院、街友、獨居。
-如果 hook 是「陪伴」，每個 query 還必須包含至少一個關係核心詞：陪伴、照顧、守候、陪病、長照、家人陪伴、照顧者。
-不要只用「回家」「故事」「訪談」這種泛詞代表陪伴。
+每個 query 以 3 到 5 個詞為宜。
+每個 query 以 3 到 5 個詞為宜。
+每個 query 至少包含一個「真實內容類型詞」：真實故事、生命故事、訪談、口述故事、見證、紀錄片。
+每個 query 需包含一個「情感或關係詞」：家人、陪伴、思念、回憶、感恩、和解、恩典、人生。
+如果 hook 帶有節慶（如端午節），請讓它自然地與「家庭回憶」、「思念」或「生命經歷」結合，不要硬湊生硬的疾病或危機詞彙。
 不要使用冒號、句號、破折號或完整句子。
 
 只輸出 JSON，不要解釋：
@@ -1091,6 +1098,14 @@ def classify_source_type(title_blob: str, channel: str) -> str:
             "原创歌曲",
             "翻唱",
             "cover",
+            "音樂",
+            "音乐",
+            "music",
+            "專輯",
+            "专辑",
+            "單曲",
+            "单曲",
+            "演唱"
         ]
     ):
         return "music-fragment"
@@ -1102,7 +1117,11 @@ def classify_source_type(title_blob: str, channel: str) -> str:
         return "institutional"
     if any(
         term in lowered
-        for term in ["回家", "陪伴", "等待", "守候", "守望", "在場", "父親", "母親", "外公", "家屬", "告別", "記憶", "人物故事", "生命故事"]
+        for term in [
+            "回家", "陪伴", "等待", "守候", "守望", "在場", "父親", "母親", "外公", "家屬", "告別", "記憶", "人物故事", "生命故事",
+            "見證", "真實故事", "和解", "恩典", "饒恕", "浪子回頭", "修復", "思念", "回憶", "親情",
+            "阿公", "阿嬤", "爺爺", "奶奶", "外婆", "祖父", "祖母", "爸", "媽", "兄弟", "姐妹"
+        ]
     ):
         return "story-fit"
     return "general"
@@ -1173,14 +1192,11 @@ def score_engagement(view_count: int, comment_count: int) -> tuple[int, list[str
             score -= 5
             reasons.append("-5 有觀看但幾乎無回應")
         elif view_count >= 100:
-            score -= 4
-            reasons.append("-4 無留言")
-        elif view_count >= 20:
-            score -= 6
-            reasons.append("-6 太冷又無留言")
+            score -= 2
+            reasons.append("-2 無留言")
         else:
-            score -= 8
-            reasons.append("-8 幾乎沒被觀眾驗證")
+            score += 0
+            reasons.append("+0 冷門但可能藏寶")
         return score, reasons
 
     if view_count < 100 and comment_count <= 1:
@@ -1252,12 +1268,15 @@ def build_rows(
         reasons.extend(channel_reasons)
         source_type = classify_source_type(metadata_blob, channel)
 
-        if story_only and source_type != "story-fit":
+        # Architectural Fix: "story_only" should mean "exclude non-story formats", 
+        # not "strictly demand a hardcoded positive keyword". 
+        # A video titled "那年端午的粽香" is a story but would be classified as "general".
+        if story_only and source_type not in ["story-fit", "general"]:
             continue
 
         if source_type == "story-fit":
-            score += 2
-            reasons.append("+2 故事貼合")
+            score += 15
+            reasons.append("+15 故事核心完美貼合")
         elif source_type == "music-fragment":
             score -= 5
             reasons.append("-5 音樂或片段")
@@ -1478,6 +1497,12 @@ def select_shortlist_rows(rows: list[TopicRow], min_score: int) -> tuple[list[To
     if not shortlisted and clean_rows:
         shortlisted = clean_rows[: min(5, len(clean_rows))]
         used_fallback = True
+        
+    # 如果連 clean_rows 都是空的（全部被排除），就直接抓今日最高分的 1 支影片硬上！
+    if not shortlisted and rows:
+        shortlisted = [rows[0]]
+        used_fallback = True
+        
     return shortlisted, used_fallback
 
 

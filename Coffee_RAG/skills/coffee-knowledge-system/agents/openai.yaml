@@ -1,0 +1,4 @@
+interface:
+  display_name: "Coffee Knowledge System"
+  short_description: "Professional coffee KB source and article workflow"
+  default_prompt: "Use $coffee-knowledge-system to ingest coffee sources and expand Coffee_RAG into a professional Markdown knowledge base."
