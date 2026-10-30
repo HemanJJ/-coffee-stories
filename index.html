@@ -1594,15 +1594,19 @@
                 }
             }
 
-            // 只有拿到有效 http(s) 連結時才顯示按鈕，避免出現按了沒反應的 #。
+            // 一律保留「故事主人的家」入口；有有效連結才可點，沒有就顯示灰色不可點狀態。
             const safeLink = story.externalLink || '';
-            const externalLinkHtml = /^https?:\/\//i.test(safeLink) ? `
+            const hasLink = /^https?:\/\//i.test(safeLink);
+            const externalLinkHtml = `
                 <div style="text-align: center; margin-top: 30px; margin-bottom: 20px;">
-                    <a href="${safeLink}" target="_blank" rel="noopener noreferrer" class="btn-action" style="background: linear-gradient(135deg, #b8683a, #f0ae73); color: white; padding: 12px 24px; text-decoration: none; display: inline-block; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(184, 104, 58, 0.4);">
+                    <a ${hasLink ? `href="${safeLink}" target="_blank" rel="noopener noreferrer"` : 'aria-disabled="true" tabindex="-1"'}
+                       class="btn-action"
+                       style="background: ${hasLink ? 'linear-gradient(135deg, #b8683a, #f0ae73)' : '#d8d2cb'}; color: ${hasLink ? 'white' : '#8a8179'}; padding: 12px 24px; text-decoration: none; display: inline-block; font-weight: bold; font-size: 1.1rem; box-shadow: ${hasLink ? '0 4px 15px rgba(184, 104, 58, 0.4)' : 'none'}; ${hasLink ? '' : 'pointer-events: none; cursor: default;'}">
                         🌍 拜訪故事主人的家
                     </a>
+                    ${hasLink ? '' : '<p style="margin:8px 0 0; color:#9a8a7c; font-size:0.9rem;">這個故事尚無外部連結</p>'}
                 </div>
-            ` : '<p style="text-align:center; margin:24px 0; color:#9a8a7c; font-size:0.95rem;">這個故事尚無外部連結</p>';
+            `;
 
             const bodyContainer = document.getElementById('dialogBody');
             bodyContainer.innerHTML = `
