@@ -1365,6 +1365,9 @@
                 const data = JSON.parse(jsonString);
 
                 const rows = data.table.rows;
+                const cols = (data.table && data.table.cols) || [];
+                const findCol = (...names) => cols.findIndex(col => names.includes(String(col && col.label || '').trim().toLowerCase()));
+                const externalLinkIndex = findCol('externallink', 'external_link', 'external link');
                 const tempDb = {};
                 let publishedCount = 0;
 
@@ -1382,10 +1385,17 @@
                     publishedCount++;
                     const sortVal = cells[2] ? parseInt(cells[2].v) || 999 : 999;
 
-                    let extLink = cells[11] ? String(cells[11].v || '') : '';
-                    if (extLink.startsWith('Date(')) {
-                        extLink = ''; // 過濾掉因為欄位位移造成的舊 Date 字串
+                    // 先掃整列找 Facebook 網址（欄位可能被 Google 判成日期而整欄失效）。
+                    const isHttp = v => /^https?:\/\//i.test(v);
+                    const isFbLink = v => /^https?:\/\/(www\.|m\.)?(facebook|fb)\./i.test(v);
+                    const cellText = c => c ? String(c.v || c.f || '').trim() : '';
+                    let extLink = cells.map(cellText).find(t => isFbLink(t)) || '';
+                    // 找不到 FB 網址，才退回表頭指定欄或 L 欄。
+                    if (!extLink) {
+                        extLink = cellText(cells[externalLinkIndex >= 0 ? externalLinkIndex : 11]);
                     }
+                    // 只接受真正的 http(s) 網址，其餘一律視為沒有連結。
+                    if (!isHttp(extLink)) extLink = '';
 
                     tempDb[id] = {
                         id: id,
@@ -1584,15 +1594,15 @@
                 }
             }
 
-            // 強制顯示「故事主人的家」按鈕（拔除安全機制）
-            let safeLink = story.externalLink || '#';
-            let externalLinkHtml = `
+            // 只有拿到有效 http(s) 連結時才顯示按鈕，避免出現按了沒反應的 #。
+            const safeLink = story.externalLink || '';
+            const externalLinkHtml = /^https?:\/\//i.test(safeLink) ? `
                 <div style="text-align: center; margin-top: 30px; margin-bottom: 20px;">
-                    <a href="${safeLink}" target="${safeLink === '#' ? '_self' : '_blank'}" class="btn-action" style="background: linear-gradient(135deg, #b8683a, #f0ae73); color: white; padding: 12px 24px; text-decoration: none; display: inline-block; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(184, 104, 58, 0.4);">
+                    <a href="${safeLink}" target="_blank" rel="noopener noreferrer" class="btn-action" style="background: linear-gradient(135deg, #b8683a, #f0ae73); color: white; padding: 12px 24px; text-decoration: none; display: inline-block; font-weight: bold; font-size: 1.1rem; box-shadow: 0 4px 15px rgba(184, 104, 58, 0.4);">
                         🌍 拜訪故事主人的家
                     </a>
                 </div>
-            `;
+            ` : '<p style="text-align:center; margin:24px 0; color:#9a8a7c; font-size:0.95rem;">這個故事尚無外部連結</p>';
 
             const bodyContainer = document.getElementById('dialogBody');
             bodyContainer.innerHTML = `
